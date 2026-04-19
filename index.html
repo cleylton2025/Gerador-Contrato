@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerador de Contrato – Mendes Advocacia</title>
+  <script src="docx.js"></script>
+  <style>
+    :root {
+      --primary:       #1a3a5c;
+      --primary-light: #2a5a8c;
+      --accent:        #c8a84b;
+      --bg:            #f0f0eb;
+      --card:          #ffffff;
+      --text:          #2c2c2c;
+      --muted:         #777;
+      --border:        #ddd;
+      --green:         #2e7d32;
+      --red:           #c0392b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 18px 40px;
+      border-bottom: 3px solid var(--accent);
+    }
+    header h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: .5px; }
+    header p  { font-size: .8rem; opacity: .65; margin-top: 3px; }
+
+    /* ── LAYOUT ── */
+    .container { max-width: 880px; margin: 0 auto; padding: 32px 20px 60px; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--card);
+      border-radius: 8px;
+      box-shadow: 0 1px 5px rgba(0,0,0,.08);
+      margin-bottom: 22px;
+      overflow: hidden;
+    }
+    .card-header {
+      background: var(--primary);
+      color: white;
+      padding: 13px 22px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .card-header .num {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: var(--primary);
+      font-size: .78rem; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .card-header h2 { font-size: .92rem; font-weight: 600; letter-spacing: .3px; }
+    .card-body { padding: 22px; }
+
+    /* ── FORM HELPERS ── */
+    .form-row { display: grid; gap: 14px; margin-bottom: 14px; }
+    .cols-2   { grid-template-columns: 1fr 1fr; }
+    .cols-3   { grid-template-columns: 1fr 1fr 1fr; }
+    .mb-16    { margin-bottom: 16px; }
+
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+
+    label.field-label {
+      font-size: .76rem; font-weight: 700;
+      color: var(--primary); text-transform: uppercase; letter-spacing: .4px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="number"],
+    input[type="date"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 9px 11px;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      font-size: .9rem;
+      color: var(--text);
+      font-family: inherit;
+      background: #fff;
+      transition: border-color .2s;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: none; border-color: var(--primary-light);
+    }
+    textarea { resize: vertical; min-height: 80px; }
+
+    /* ── PF / PJ TOGGLE ── */
+    .type-toggle {
+      display: inline-flex;
+      border: 2px solid var(--primary);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .type-toggle button {
+      padding: 9px 28px;
+      border: none;
+      background: white;
+      color: var(--primary);
+      font-size: .88rem; font-weight: 700;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .type-toggle button.active { background: var(--primary); color: white; }
+
+    /* ── SCOPE SECTION LABEL ── */
+    .section-label {
+      font-size: .73rem; font-weight: 800; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .8px;
+      margin-bottom: 10px; margin-top: 4px;
+    }
+
+    /* ── SCOPE RADIO OPTIONS ── */
+    .scope-options { display: flex; flex-direction: column; gap: 7px; margin-bottom: 20px; }
+
+    .scope-option {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all .18s;
+      user-select: none;
+    }
+    .scope-option:hover { border-color: var(--primary-light); background: #f7f9fc; }
+    .scope-option.selected { border-color: var(--primary); background: #eef2f8; }
+    .scope-option input[type="radio"] { accent-color: var(--primary); width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; }
+    .scope-option span { font-size: .88rem; }
+
+    /* ── CHECKLIST ── */
+    .checklist { display: flex; flex-direction: column; gap: 7px; }
+
+    .check-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 9px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all .18s;
+      user-select: none;
+    }
+    .check-item:hover { border-color: var(--primary-light); background: #f7f9fc; }
+    .check-item.checked { border-color: var(--primary); background: #eef2f8; }
+    .check-item input[type="checkbox"] {
+      width: 16px; height: 16px; flex-shrink: 0; margin-top: 2px;
+      cursor: pointer; accent-color: var(--primary);
+    }
+    .check-item span { font-size: .88rem; line-height: 1.4; }
+
+    /* ── CUSTOM ITEM ── */
+    .add-custom { display: flex; gap: 8px; margin-top: 10px; }
+    .add-custom input { flex: 1; }
+    .btn-add {
+      padding: 0 16px;
+      background: var(--primary); color: white;
+      border: none; border-radius: 6px;
+      font-size: .82rem; font-weight: 700;
+      cursor: pointer; white-space: nowrap;
+    }
+    .btn-add:hover { background: var(--primary-light); }
+
+    .custom-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 12px;
+      background: #fffbf0;
+      border: 1.5px solid var(--accent);
+      border-radius: 6px; margin-top: 6px;
+      font-size: .86rem;
+    }
+    .custom-item button {
+      background: none; border: none;
+      color: var(--red); cursor: pointer;
+      font-size: .95rem; padding: 0 4px;
+    }
+
+    /* ── FEE BLOCKS ── */
+    .fee-block {
+      border: 1.5px solid var(--border);
+      border-radius: 8px; overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .fee-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px;
+      background: #f7f8fb;
+      cursor: pointer;
+      user-select: none;
+    }
+    .fee-header.locked { cursor: default; }
+
+    /* toggle pill */
+    .fee-toggle {
+      width: 38px; height: 20px;
+      background: #ccc;
+      border-radius: 10px;
+      position: relative; flex-shrink: 0;
+      transition: background .2s;
+    }
+    .fee-toggle.on     { background: var(--primary); }
+    .fee-toggle.locked { background: var(--accent); }
+    .fee-toggle::after {
+      content: ''; width: 16px; height: 16px;
+      background: white; border-radius: 50%;
+      position: absolute; top: 2px; left: 2px;
+      transition: left .2s;
+    }
+    .fee-toggle.on::after, .fee-toggle.locked::after { left: 20px; }
+
+    .fee-header strong { font-size: .9rem; }
+
+    .fee-body {
+      padding: 16px;
+      border-top: 1px solid var(--border);
+      display: none;
+    }
+    .fee-body.open { display: block; }
+
+    .fee-note {
+      font-size: .8rem; color: var(--muted);
+      margin-top: 6px; font-style: italic;
+    }
+
+    /* ── DATE PREVIEW ── */
+    #parcelaDates {
+      font-size: .82rem; color: var(--muted);
+      margin-top: 8px; line-height: 1.6;
+    }
+
+    /* ── GENERATE BUTTON ── */
+    .generate-btn {
+      display: block; width: 100%;
+      padding: 15px;
+      background: var(--accent); color: var(--primary);
+      border: none; border-radius: 8px;
+      font-size: 1rem; font-weight: 800;
+      cursor: pointer; letter-spacing: .6px;
+      text-transform: uppercase;
+      transition: all .2s;
+      margin-top: 8px;
+    }
+    .generate-btn:hover:not(:disabled) {
+      background: #d4a93c;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(0,0,0,.15);
+    }
+    .generate-btn:disabled { opacity: .7; cursor: wait; transform: none; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 620px) {
+      .cols-2, .cols-3 { grid-template-columns: 1fr; }
+      header { padding: 14px 18px; }
+      .container { padding: 18px 14px 50px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Mendes Advocacia — Gerador de Contratos</h1>
+  <p>Contrato de Honorários Advocatícios</p>
+</header>
+
+<div class="container">
+
+  <!-- ═══ CARD 1 – DADOS BÁSICOS ═══ -->
+  <div class="card">
+    <div class="card-header">
+      <div class="num">1</div>
+      <h2>Dados Básicos</h2>
+    </div>
+    <div class="card-body">
+      <div class="form-row cols-2">
+        <div class="form-group">
+          <label class="field-label">Data do Contrato</label>
+          <input type="date" id="dataContrato">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="field-label">Objeto do Serviço</label>
+        <textarea id="objeto" rows="3"
+          placeholder="Ex: Ação judicial para reestabelecimento das contas e funcionalidades do perfil @empresa nos serviços da plataforma Meta…"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ CARD 2 – DADOS DO CLIENTE ═══ -->
+  <div class="card">
+    <div class="card-header">
+      <div class="num">2</div>
+      <h2>Dados do Cliente (Contratante)</h2>
+    </div>
+    <div class="card-body">
+
+      <div class="type-toggle">
+        <button class="active" id="btnPJ" onclick="setClientType('PJ')">Pessoa Jurídica</button>
+        <button id="btnPF" onclick="setClientType('PF')">Pessoa Física</button>
+      </div>
+
+      <!-- PJ -->
+      <div id="fieldsPJ">
+        <div class="form-row cols-2 mb-16">
+          <div class="form-group">
+            <label class="field-label">Razão Social</label>
+            <input type="text" id="pj_razaoSocial" placeholder="Ex: Empresa Exemplo LTDA">
+          </div>
+          <div class="form-group">
+            <label class="field-label">CNPJ</label>
+            <input type="text" id="pj_cnpj" placeholder="00.000.000/0000-00">
+          </div>
+        </div>
+        <div class="form-group mb-16">
+          <label class="field-label">Endereço Completo</label>
+          <input type="text" id="pj_endereco" placeholder="Rua, n.º, Bairro, Cidade-UF, CEP">
+        </div>
+        <div class="form-row cols-2 mb-16">
+          <div class="form-group">
+            <label class="field-label">E-mail</label>
+            <input type="email" id="pj_email" placeholder="contato@empresa.com.br">
+          </div>
+          <div class="form-group">
+            <label class="field-label">Telefone (com DDD)</label>
+            <input type="tel" id="pj_telefone" placeholder="(28) 99999-9999">
+          </div>
+        </div>
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label class="field-label">Nome do Sócio / Representante Legal</label>
+            <input type="text" id="pj_socio" placeholder="Nome completo">
+          </div>
+          <div class="form-group">
+            <label class="field-label">CPF do Sócio</label>
+            <input type="text" id="pj_cpfSocio" placeholder="000.000.000-00">
+          </div>
+        </div>
+      </div>
+
+      <!-- PF -->
+      <div id="fieldsPF" style="display:none">
+        <div class="form-row cols-2 mb-16">
+          <div class="form-group">
+            <label class="field-label">Nome Completo</label>
+            <input type="text" id="pf_nome" placeholder="Nome completo">
+          </div>
+          <div class="form-group">
+            <label class="field-label">CPF</label>
+            <input type="text" id="pf_cpf" placeholder="000.000.000-00">
+          </div>
+        </div>
+        <div class="form-row cols-3 mb-16">
+          <div class="form-group">
+            <label class="field-label">Nacionalidade</label>
+            <input type="text" id="pf_nacionalidade" value="brasileiro(a)" placeholder="brasileiro(a)">
+          </div>
+          <div class="form-group">
+            <label class="field-label">Estado Civil</label>
+            <select id="pf_estadoCivil">
+              <option value="solteiro(a)">Solteiro(a)</option>
+              <option value="casado(a)">Casado(a)</option>
+              <option value="divorciado(a)">Divorciado(a)</option>
+              <option value="viúvo(a)">Viúvo(a)</option>
+              <option value="separado(a)">Separado(a)</option>
+              <option value="em união estável">União Estável</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="field-label">Profissão</label>
+            <input type="text" id="pf_profissao" placeholder="Ex: Empresário(a)">
+          </div>
+        </div>
+        <div class="form-group mb-16">
+          <label class="field-label">Endereço Completo</label>
+          <input type="text" id="pf_endereco" placeholder="Rua, n.º, Bairro, Cidade-UF, CEP">
+        </div>
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label class="field-label">E-mail</label>
+            <input type="email" id="pf_email" placeholder="cliente@email.com">
+          </div>
+          <div class="form-group">
+            <label class="field-label">Telefone (com DDD)</label>
+            <input type="tel" id="pf_telefone" placeholder="(28) 99999-9999">
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ CARD 3 – ESCOPO ═══ -->
+  <div class="card">
+    <div class="card-header">
+      <div class="num">3</div>
+      <h2>Escopo do Trabalho</h2>
+    </div>
+    <div class="card-body">
+
+      <div class="section-label">Abrangência da Atuação</div>
+      <div class="scope-options" id="scopeOptions">
+        <label class="scope-option selected">
+          <input type="radio" name="abrangencia" value="judicial1" checked onchange="onScopeChange(this)">
+          <span>Somente Judicial — 1ª Instância (até a sentença)</span>
+        </label>
+        <label class="scope-option">
+          <input type="radio" name="abrangencia" value="judicial2" onchange="onScopeChange(this)">
+          <span>Somente Judicial — até 2ª Instância (inclui fases recursais)</span>
+        </label>
+        <label class="scope-option">
+          <input type="radio" name="abrangencia" value="extrajudicial" onchange="onScopeChange(this)">
+          <span>Somente Extrajudicial</span>
+        </label>
+        <label class="scope-option">
+          <input type="radio" name="abrangencia" value="ambos1" onchange="onScopeChange(this)">
+          <span>Extrajudicial + Judicial — 1ª Instância</span>
+        </label>
+        <label class="scope-option">
+          <input type="radio" name="abrangencia" value="ambos2" onchange="onScopeChange(this)">
+          <span>Extrajudicial + Judicial — até 2ª Instância</span>
+        </label>
+      </div>
+
+      <!-- Judicial checklist -->
+      <div id="labelJudicial" class="section-label" style="margin-top:16px">Atos Judiciais Incluídos</div>
+      <div class="checklist" id="checklistJudicial">
+        <label class="check-item checked"><input type="checkbox" checked><span>Análise estratégica do caso</span></label>
+        <label class="check-item checked"><input type="checkbox" checked><span>Elaboração e protocolo de petição inicial, dando início ao processo judicial</span></label>
+        <label class="check-item checked"><input type="checkbox" checked><span>Respostas processuais (réplicas e pedidos de informações)</span></label>
+        <label class="check-item checked"><input type="checkbox" checked><span>Pedidos e requerimentos</span></label>
+        <label class="check-item checked"><input type="checkbox" checked><span>Orientações ao cliente e, eventualmente, às testemunhas para audiência</span></label>
+        <label class="check-item checked"><input type="checkbox" checked><span>Acompanhamento em audiência e orientações</span></label>
+        <label class="check-item checked"><input type="checkbox" checked><span>Cumprimento de prazos processuais</span></label>
+        <label class="check-item checked"><input type="checkbox" checked><span>Todos os atos judiciais pertinentes ao processo</span></label>
+      </div>
+
+      <!-- Extrajudicial checklist -->
+      <div id="labelExtrajudicial" class="section-label" style="margin-top:20px; display:none">Atos Extrajudiciais Incluídos</div>
+      <div class="checklist" id="checklistExtrajudicial" style="display:none">
+        <label class="check-item checked"><input type="checkbox" checked><span>Análise estratégica do caso</span></label>
+        <label class="check-item checked"><input type="checkbox" checked><span>Envio de notificações e comunicados</span></label>
+        <label class="check-item checked"><input type="checkbox" checked><span>Respostas a notificações ou comunicados</span></label>
+        <label class="check-item checked"><input type="checkbox" checked><span>Reuniões de tratativas e negociações, ao limite de 3 (três) reuniões</span></label>
+      </div>
+
+      <!-- Custom items -->
+      <div class="section-label" style="margin-top:20px">Itens Adicionais (opcional)</div>
+      <div id="customItemsContainer"></div>
+      <div class="add-custom">
+        <input type="text" id="customItemInput" placeholder="Adicionar item personalizado ao escopo…">
+        <button class="btn-add" onclick="addCustomItem()">+ Adicionar</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ CARD 4 – HONORÁRIOS ═══ -->
+  <div class="card">
+    <div class="card-header">
+      <div class="num">4</div>
+      <h2>Honorários e Forma de Pagamento</h2>
+    </div>
+    <div class="card-body">
+
+      <!-- Entrada (sempre ativo) -->
+      <div class="fee-block">
+        <div class="fee-header locked">
+          <div class="fee-toggle locked"></div>
+          <strong>Entrada</strong>
+        </div>
+        <div class="fee-body open">
+          <div class="form-row cols-2">
+            <div class="form-group">
+              <label class="field-label">Valor (R$)</label>
+              <input type="number" id="fee_entradaValor" min="0" step="0.01" placeholder="0,00">
+            </div>
+            <div class="form-group">
+              <label class="field-label">Data de Vencimento</label>
+              <input type="date" id="fee_entradaVenc">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Parcelas -->
+      <div class="fee-block">
+        <div class="fee-header" onclick="toggleFee('parcelas')">
+          <div class="fee-toggle" id="toggle_parcelas"></div>
+          <strong>Parcelas Mensais</strong>
+        </div>
+        <div class="fee-body" id="body_parcelas">
+          <div class="form-row cols-3">
+            <div class="form-group">
+              <label class="field-label">Quantidade de Parcelas</label>
+              <input type="number" id="fee_parcelasQtd" min="1" max="60" placeholder="Ex: 3"
+                oninput="updateParcelaDates()">
+            </div>
+            <div class="form-group">
+              <label class="field-label">Valor por Parcela (R$)</label>
+              <input type="number" id="fee_parcelasValor" min="0" step="0.01" placeholder="0,00">
+            </div>
+            <div class="form-group">
+              <label class="field-label">Data da 1ª Parcela</label>
+              <input type="date" id="fee_parcelasData1" oninput="updateParcelaDates()">
+            </div>
+          </div>
+          <div id="parcelaDates"></div>
+        </div>
+      </div>
+
+      <!-- Liminar -->
+      <div class="fee-block">
+        <div class="fee-header" onclick="toggleFee('liminar')">
+          <div class="fee-toggle" id="toggle_liminar"></div>
+          <strong>Honorários por Liminar</strong>
+        </div>
+        <div class="fee-body" id="body_liminar">
+          <div class="form-row cols-2">
+            <div class="form-group">
+              <label class="field-label">Valor (R$)</label>
+              <input type="number" id="fee_liminarValor" min="0" step="0.01" placeholder="0,00">
+            </div>
+          </div>
+          <p class="fee-note">Condição: pagamento em até 5 (cinco) dias úteis após decisão liminar favorável.</p>
+        </div>
+      </div>
+
+      <!-- Êxito -->
+      <div class="fee-block">
+        <div class="fee-header" onclick="toggleFee('exito')">
+          <div class="fee-toggle" id="toggle_exito"></div>
+          <strong>Honorários por Êxito</strong>
+        </div>
+        <div class="fee-body" id="body_exito">
+          <div class="form-row cols-2">
+            <div class="form-group">
+              <label class="field-label">Percentual sobre o Resultado (%)</label>
+              <input type="number" id="fee_exitoPerc" min="1" max="100" step="0.5" placeholder="Ex: 20">
+            </div>
+          </div>
+          <p class="fee-note">Incide sobre o valor efetivamente recebido, somente se e quando houver condenação financeira.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <button class="generate-btn" id="generateBtn" onclick="generateContract()">
+    ⬇ &nbsp;Gerar Contrato em Word (.docx)
+  </button>
+
+</div><!-- /container -->
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  LOGO (base64 PNG)
+// ═══════════════════════════════════════════════════════
+const LOGO_B64 = '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';
+
+function b64ToU8(b64) {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let clientType  = 'PJ';
+const feeOn     = { parcelas: false, liminar: false, exito: false };
+let customItems = [];  // array of strings | null (null = removed)
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('dataContrato').value     = today;
+  document.getElementById('fee_entradaVenc').value  = today;
+
+  // Checkbox visual sync (native label toggle + change event)
+  document.querySelectorAll('.check-item input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      cb.closest('.check-item').classList.toggle('checked', cb.checked);
+    });
+  });
+
+  // Enter key on custom item input
+  document.getElementById('customItemInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); addCustomItem(); }
+  });
+});
+
+// ═══════════════════════════════════════════════════════
+//  CLIENT TYPE
+// ═══════════════════════════════════════════════════════
+function setClientType(type) {
+  clientType = type;
+  document.getElementById('fieldsPJ').style.display = type === 'PJ' ? 'block' : 'none';
+  document.getElementById('fieldsPF').style.display = type === 'PF' ? 'block' : 'none';
+  document.getElementById('btnPJ').classList.toggle('active', type === 'PJ');
+  document.getElementById('btnPF').classList.toggle('active', type === 'PF');
+}
+
+// ═══════════════════════════════════════════════════════
+//  SCOPE TOGGLE
+// ═══════════════════════════════════════════════════════
+function onScopeChange(radio) {
+  // Update visual selection
+  document.querySelectorAll('.scope-option').forEach(opt => opt.classList.remove('selected'));
+  radio.closest('.scope-option').classList.add('selected');
+  updateScopeVisibility();
+}
+
+function updateScopeVisibility() {
+  const val = document.querySelector('input[name="abrangencia"]:checked').value;
+  const showJ = val !== 'extrajudicial';
+  const showE = val === 'extrajudicial' || val === 'ambos1' || val === 'ambos2';
+
+  document.getElementById('labelJudicial').style.display      = showJ ? 'block' : 'none';
+  document.getElementById('checklistJudicial').style.display  = showJ ? 'flex'  : 'none';
+  document.getElementById('labelExtrajudicial').style.display = showE ? 'block' : 'none';
+  document.getElementById('checklistExtrajudicial').style.display = showE ? 'flex' : 'none';
+
+  // Auto-check all items when a list becomes visible
+  if (showJ) setAllChecked('#checklistJudicial', true);
+  if (showE) setAllChecked('#checklistExtrajudicial', true);
+}
+
+function setAllChecked(selector, state) {
+  document.querySelectorAll(selector + ' input[type="checkbox"]').forEach(cb => {
+    cb.checked = state;
+    cb.closest('.check-item').classList.toggle('checked', state);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  CUSTOM SCOPE ITEMS
+// ═══════════════════════════════════════════════════════
+function addCustomItem() {
+  const input = document.getElementById('customItemInput');
+  const text  = input.value.trim();
+  if (!text) return;
+
+  const idx = customItems.length;
+  customItems.push(text);
+
+  const div = document.createElement('div');
+  div.className   = 'custom-item';
+  div.id          = 'ci_' + idx;
+  div.innerHTML   = `<span>${escapeHtml(text)}</span>`
+                  + `<button onclick="removeCustomItem(${idx})" title="Remover">✕</button>`;
+  document.getElementById('customItemsContainer').appendChild(div);
+  input.value = '';
+  input.focus();
+}
+
+function removeCustomItem(idx) {
+  customItems[idx] = null;
+  const el = document.getElementById('ci_' + idx);
+  if (el) el.remove();
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ═══════════════════════════════════════════════════════
+//  FEE TOGGLES
+// ═══════════════════════════════════════════════════════
+function toggleFee(key) {
+  feeOn[key] = !feeOn[key];
+  document.getElementById('toggle_' + key).classList.toggle('on', feeOn[key]);
+  document.getElementById('body_'   + key).classList.toggle('open', feeOn[key]);
+}
+
+// ═══════════════════════════════════════════════════════
+//  INSTALLMENT DATE PREVIEW
+// ═══════════════════════════════════════════════════════
+function updateParcelaDates() {
+  const qtd  = parseInt(document.getElementById('fee_parcelasQtd').value) || 0;
+  const dt1  = document.getElementById('fee_parcelasData1').value;
+  const el   = document.getElementById('parcelaDates');
+
+  if (!qtd || !dt1) { el.innerHTML = ''; return; }
+
+  const lines = [];
+  for (let i = 0; i < qtd; i++) {
+    lines.push(`<strong>${i+1}ª:</strong> ${formatDateBR(addMonths(dt1, i))}`);
+  }
+  el.innerHTML = lines.join(' &nbsp;|&nbsp; ');
+}
+
+// ═══════════════════════════════════════════════════════
+//  DATE HELPERS
+// ═══════════════════════════════════════════════════════
+const MONTHS_BR = ['janeiro','fevereiro','março','abril','maio','junho',
+                   'julho','agosto','setembro','outubro','novembro','dezembro'];
+
+function formatDateBR(iso) {
+  const [y,m,d] = iso.split('-').map(Number);
+  return `${d} de ${MONTHS_BR[m-1]} de ${y}`;
+}
+
+function formatDateShort(iso) {
+  const [y,m,d] = iso.split('-').map(Number);
+  return `${String(d).padStart(2,'0')}/${String(m).padStart(2,'0')}/${y}`;
+}
+
+function addMonths(iso, n) {
+  const [y,m,d] = iso.split('-').map(Number);
+  const dt = new Date(y, m - 1 + n, d);
+  return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  CURRENCY HELPERS
+// ═══════════════════════════════════════════════════════
+function fmtBRL(val) {
+  return parseFloat(val).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+// ─── número por extenso (pt-BR) ───
+function numWords(n) {
+  n = Math.round(n);
+  if (n === 0)  return 'zero';
+  if (n < 0)    return 'menos ' + numWords(-n);
+
+  const ones = ['','um','dois','três','quatro','cinco','seis','sete','oito','nove',
+                'dez','onze','doze','treze','quatorze','quinze','dezesseis',
+                'dezessete','dezoito','dezenove'];
+  const tens = ['','','vinte','trinta','quarenta','cinquenta',
+                'sessenta','setenta','oitenta','noventa'];
+  const hund = ['','cento','duzentos','trezentos','quatrocentos','quinhentos',
+                'seiscentos','setecentos','oitocentos','novecentos'];
+
+  if (n < 20)    return ones[n];
+  if (n < 100)   { const t=Math.floor(n/10),o=n%10; return tens[t]+(o?' e '+ones[o]:''); }
+  if (n === 100) return 'cem';
+  if (n < 1000)  { const h=Math.floor(n/100),r=n%100; return hund[h]+(r?' e '+numWords(r):''); }
+  if (n < 1000000) {
+    const k=Math.floor(n/1000), r=n%1000;
+    const ts = k===1 ? 'mil' : numWords(k)+' mil';
+    return ts + (r ? (r<100?' e ':' ') + numWords(r) : '');
+  }
+  return n.toString();
+}
+
+function currencyWords(val) {
+  const n  = parseFloat(val);
+  const rs = Math.floor(n);
+  const cs = Math.round((n - rs) * 100);
+  let s = numWords(rs) + (rs === 1 ? ' real' : ' reais');
+  if (cs > 0) s += ' e ' + numWords(cs) + (cs === 1 ? ' centavo' : ' centavos');
+  return s;
+}
+
+function percWords(p) { return numWords(parseFloat(p)) + ' por cento'; }
+
+// ═══════════════════════════════════════════════════════
+//  SCOPE TEXT BUILDER
+// ═══════════════════════════════════════════════════════
+function getCheckedTexts(listId) {
+  const items = [];
+  document.querySelectorAll('#' + listId + ' input[type="checkbox"]:checked').forEach(cb => {
+    items.push(cb.closest('.check-item').querySelector('span').textContent.trim());
+  });
+  return items;
+}
+
+function buildScopeParas(objeto, abrangencia, { Document, Paragraph, TextRun, AlignmentType }) {
+
+  const judItems  = getCheckedTexts('checklistJudicial');
+  const extItems  = getCheckedTexts('checklistExtrajudicial');
+  const custItems = customItems.filter(Boolean);
+
+  const introText = (txt) => new Paragraph({
+    alignment: AlignmentType.JUSTIFIED,
+    spacing:   { before: 0, after: 140 },
+    children: txt
+  });
+
+  const mix = (parts) => parts.map(p =>
+    new TextRun({ text: p.t, bold: !!p.b, font: 'Arial', size: 24, color: '000000' })
+  );
+
+  const paragraphs = [];
+
+  // ── Parágrafo de apresentação ──
+  paragraphs.push(introText(mix([
+    { t: 'Neste contrato em específico, o ' },
+    { t: 'CONTRATANTE/CLIENTE', b: true },
+    { t: ' está contratando o escritório ' },
+    { t: 'MENDES ADVOCACIA', b: true },
+    { t: ` para a prestação de serviços jurídicos referentes à ${objeto}.` }
+  ])));
+
+  // ── Parágrafo de escopo ──
+  const scopePhrases = {
+    judicial1:     'todas as fases judiciais do processo em primeira instância, desde a petição inicial até a sentença',
+    judicial2:     'todas as fases judiciais do processo, incluindo as fases recursais até a segunda instância',
+    extrajudicial: 'a atuação exclusivamente extrajudicial',
+    ambos1:        'a atuação extrajudicial e todas as fases judiciais do processo em primeira instância, desde a petição inicial até a sentença',
+    ambos2:        'a atuação extrajudicial e todas as fases judiciais do processo, incluindo as fases recursais até a segunda instância',
+  };
+
+  const hasJudicial = abrangencia !== 'extrajudicial';
+  const hasExtra    = abrangencia === 'extrajudicial' || abrangencia === 'ambos1' || abrangencia === 'ambos2';
+
+  const phrase = scopePhrases[abrangencia] || '';
+
+  if (hasJudicial && hasExtra) {
+    // Dois parágrafos separados
+    if (judItems.length > 0) {
+      paragraphs.push(introText([
+        new TextRun({ text: `O serviço compreende ${phrase}. Os serviços judiciais incluem: ${judItems.join('; ')}.`, font: 'Arial', size: 24, color: '000000' })
+      ]));
+    }
+    if (extItems.length > 0) {
+      paragraphs.push(introText([
+        new TextRun({ text: `São também do escopo dos serviços a atuação da equipe jurídica da Contratada nas atuações extrajudiciais, como tratativas e negociações com a parte contrária. Os serviços extrajudiciais incluem: ${extItems.join('; ')}.`, font: 'Arial', size: 24, color: '000000' })
+      ]));
+    }
+  } else {
+    const allItems = [...judItems, ...extItems];
+    if (allItems.length > 0) {
+      paragraphs.push(introText([
+        new TextRun({ text: `O serviço compreende ${phrase}. Isso inclui: ${allItems.join('; ')}.`, font: 'Arial', size: 24, color: '000000' })
+      ]));
+    }
+  }
+
+  // ── Itens customizados ──
+  if (custItems.length > 0) {
+    paragraphs.push(introText([
+      new TextRun({ text: `Estão ainda incluídos no escopo: ${custItems.join('; ')}.`, font: 'Arial', size: 24, color: '000000' })
+    ]));
+  }
+
+  return paragraphs;
+}
+
+// ═══════════════════════════════════════════════════════
+//  GENERATE CONTRACT
+// ═══════════════════════════════════════════════════════
+async function generateContract() {
+  // ── Validação básica ──
+  const erros = [];
+  if (!document.getElementById('dataContrato').value)    erros.push('Data do contrato');
+  if (!document.getElementById('objeto').value.trim())   erros.push('Objeto do serviço');
+  if (clientType === 'PJ') {
+    if (!document.getElementById('pj_razaoSocial').value) erros.push('Razão Social');
+    if (!document.getElementById('pj_cnpj').value)        erros.push('CNPJ');
+  } else {
+    if (!document.getElementById('pf_nome').value) erros.push('Nome do cliente');
+    if (!document.getElementById('pf_cpf').value)  erros.push('CPF do cliente');
+  }
+  if (!document.getElementById('fee_entradaValor').value) erros.push('Valor da entrada');
+  if (!document.getElementById('fee_entradaVenc').value)  erros.push('Data de vencimento da entrada');
+
+  if (erros.length) {
+    alert('Por favor, preencha os campos obrigatórios:\n\n• ' + erros.join('\n• '));
+    return;
+  }
+
+  const btn = document.getElementById('generateBtn');
+  btn.disabled   = true;
+  btn.textContent = '⏳  Gerando contrato…';
+
+  try {
+    await _buildAndDownload();
+  } catch (err) {
+    console.error(err);
+    alert('Erro ao gerar o contrato:\n' + err.message);
+  } finally {
+    btn.disabled   = false;
+    btn.innerHTML  = '⬇ &nbsp;Gerar Contrato em Word (.docx)';
+  }
+}
+
+async function _buildAndDownload() {
+  const {
+    Document, Packer, Paragraph, TextRun,
+    Table, TableRow, TableCell,
+    AlignmentType, BorderStyle, WidthType, ShadingType, VerticalAlign,
+    Header, ImageRun, PageBreak
+  } = docx;
+
+  // ─── Design tokens (extraídos do template visual) ───
+  const RED    = 'B12229';  // vermelho da identidade
+  const GRAY   = '6E6964';  // cinza dos subtítulos
+  const BG_SEC = 'EEE6E1';  // fundo dos cabeçalhos de seção
+  const BG_LBL = 'F5F2EE';  // fundo das células de rótulo
+  const BG_BOX = 'FBF8F5';  // fundo das caixas de conteúdo
+  const BD     = 'D8D1CB';  // cor das bordas quentes
+  const WHITE  = 'FFFFFF';
+  const CW     = 9972;      // largura do conteúdo (DXA)
+  const HW     = 4986;      // metade
+
+  const bWarm = (sz = 8) => ({ style: BorderStyle.SINGLE, size: sz, color: BD });
+  const bNone = ()        => ({ style: BorderStyle.SINGLE, size: 0,  color: WHITE });
+  const bFee  = ()        => ({ style: BorderStyle.SINGLE, size: 1,  color: '999999' });
+
+  const BWarm = { top: bWarm(), bottom: bWarm(), left: bWarm(), right: bWarm() };
+  const BNone = { top: bNone(), bottom: bNone(), left: bNone(), right: bNone() };
+  const BFee  = { top: bFee(),  bottom: bFee(),  left: bFee(),  right: bFee()  };
+
+  // ─── Dados do formulário ───
+  const dataContrato = document.getElementById('dataContrato').value;
+  const objeto       = document.getElementById('objeto').value.trim();
+  const abrangencia  = document.querySelector('input[name="abrangencia"]:checked').value;
+
+  const entradaValor  = document.getElementById('fee_entradaValor').value;
+  const entradaVenc   = document.getElementById('fee_entradaVenc').value;
+  const useParcelas   = feeOn.parcelas;
+  const parcelasQtd   = useParcelas ? parseInt(document.getElementById('fee_parcelasQtd').value) || 0 : 0;
+  const parcelasValor = useParcelas ? document.getElementById('fee_parcelasValor').value : '';
+  const parcelasData1 = useParcelas ? document.getElementById('fee_parcelasData1').value : '';
+  const useLiminar    = feeOn.liminar;
+  const liminarValor  = useLiminar ? document.getElementById('fee_liminarValor').value : '';
+  const useExito      = feeOn.exito;
+  const exitoPerc     = useExito ? document.getElementById('fee_exitoPerc').value : '';
+
+  let clienteBlock = '', clienteNome = '';
+  if (clientType === 'PJ') {
+    const rs = document.getElementById('pj_razaoSocial').value;
+    const cnpj = document.getElementById('pj_cnpj').value;
+    const end  = document.getElementById('pj_endereco').value;
+    const email= document.getElementById('pj_email').value;
+    const tel  = document.getElementById('pj_telefone').value;
+    const socio= document.getElementById('pj_socio').value;
+    const cpfs = document.getElementById('pj_cpfSocio').value;
+    clienteNome  = rs;
+    clienteBlock = `${rs}, pessoa jurídica de direito privado, inscrita no CNPJ n. ${cnpj}, com sede na ${end}, e-mail para contato ${email}, e telefone (WhatsApp): ${tel}, representada por seu(sua) Sócio(a) ${socio}, inscrito(a) no CPF n. ${cpfs}.`;
+  } else {
+    const nome = document.getElementById('pf_nome').value;
+    const nac  = document.getElementById('pf_nacionalidade').value;
+    const ec   = document.getElementById('pf_estadoCivil').value;
+    const prof = document.getElementById('pf_profissao').value;
+    const cpf  = document.getElementById('pf_cpf').value;
+    const end  = document.getElementById('pf_endereco').value;
+    const email= document.getElementById('pf_email').value;
+    const tel  = document.getElementById('pf_telefone').value;
+    clienteNome  = nome;
+    clienteBlock = `${nome}, ${nac}, ${ec}, ${prof}, inscrito(a) no CPF n. ${cpf}, residente e domiciliado(a) à ${end}, e-mail para contato ${email}, e telefone (WhatsApp): ${tel}.`;
+  }
+
+  // ─── Linhas de honorários ───
+  const feeRows = [];
+  feeRows.push({
+    mod: 'Entrada', val: fmtBRL(entradaValor),
+    cond: `A quantia de ${fmtBRL(entradaValor)} (${currencyWords(entradaValor)}), que será paga até o dia ${formatDateShort(entradaVenc)}, na chave Pix (CNPJ): 33.773.685/0001-68.`
+  });
+  if (useParcelas && parcelasQtd > 0 && parcelasValor && parcelasData1) {
+    const dates = [];
+    for (let i = 0; i < parcelasQtd; i++) dates.push(formatDateShort(addMonths(parcelasData1, i)));
+    feeRows.push({
+      mod: `Parcelas\nMensais\n(${numWords(parcelasQtd)}x)`,
+      val: `${fmtBRL(parcelasValor)}\n/mês`,
+      cond: `${numWords(parcelasQtd).charAt(0).toUpperCase()+numWords(parcelasQtd).slice(1)} (${parcelasQtd}) parcelas mensais de ${fmtBRL(parcelasValor)} (${currencyWords(parcelasValor)}) cada, com vencimentos: ${dates.map((d,i)=>`${i+1}ª: ${d}`).join('; ')}. Pagamento na chave Pix (CNPJ): 33.773.685/0001-68.`
+    });
+  }
+  if (useLiminar && liminarValor) {
+    feeRows.push({
+      mod: 'Honorários\npor Liminar', val: fmtBRL(liminarValor),
+      cond: `Se, e somente se, for obtida decisão liminar favorável ao CONTRATANTE/CLIENTE, serão pagos, adicionalmente, ${fmtBRL(liminarValor)} (${currencyWords(liminarValor)}), em até 5 (cinco) dias úteis após a decisão, na chave Pix (CNPJ): 33.773.685/0001-68.`
+    });
+  }
+  if (useExito && exitoPerc) {
+    feeRows.push({
+      mod: 'Honorários\nsobre o\nResultado', val: `${exitoPerc}%`,
+      cond: `Ao final do processo, em havendo condenação financeira da parte contrária, o CONTRATANTE/CLIENTE pagará ao escritório MENDES ADVOCACIA ${exitoPerc}% (${percWords(exitoPerc)}) sobre o valor efetivamente recebido, e somente se e quando receber. Não havendo condenações financeiras, o cliente nada nos deverá.`
+    });
+  }
+
+  // ─── Helpers de parágrafo ───
+  const TR = (text, opts = {}) => new TextRun({
+    text, bold: !!opts.b, size: opts.sz || 22, font: 'Arial',
+    color: opts.col || '000000',
+    ...(opts.brk ? { break: 1 } : {})
+  });
+
+  const PT = (text, opts = {}) => new Paragraph({
+    alignment: opts.center ? AlignmentType.CENTER
+             : opts.just   ? AlignmentType.JUSTIFIED
+             :               AlignmentType.LEFT,
+    spacing: { before: opts.sb || 0, after: opts.sa || 140 },
+    children: [TR(text, opts)]
+  });
+
+  const PM = (parts, opts = {}) => new Paragraph({
+    alignment: opts.center ? AlignmentType.CENTER
+             : opts.just   ? AlignmentType.JUSTIFIED
+             :               AlignmentType.LEFT,
+    spacing: { before: opts.sb || 0, after: opts.sa || 140 },
+    children: parts.map(p => TR(p.t, { b: p.b, sz: p.sz, col: p.col }))
+  });
+
+  const GAP = (h = 120) => new Paragraph({ spacing: { after: h }, children: [] });
+
+  // ─── Cabeçalho de seção (caixa EEE6E1, largura total) ───
+  const SEC = (num, title, subtitle) => new Table({
+    width: { size: CW, type: WidthType.DXA }, columnWidths: [CW],
+    rows: [new TableRow({ children: [new TableCell({
+      borders: BNone, width: { size: CW, type: WidthType.DXA },
+      shading: { fill: BG_SEC, type: ShadingType.CLEAR },
+      margins: { top: 120, bottom: 100, left: 160, right: 140 },
+      children: [
+        new Paragraph({ spacing: { after: 0 },
+          children: [TR(`${num}. ${title}`, { b: true, sz: 25, col: RED })] }),
+        new Paragraph({ spacing: { before: 40, after: 0 },
+          children: [TR(subtitle, { sz: 19, col: GRAY })] })
+      ]
+    })]})],
+  });
+
+  // ─── Linha de partes (label | conteúdo) ───
+  const partyRow = (label, contentParas) => new TableRow({ children: [
+    new TableCell({
+      borders: BWarm, width: { size: HW, type: WidthType.DXA },
+      shading: { fill: BG_LBL, type: ShadingType.CLEAR },
+      margins: { top: 140, bottom: 130, left: 120, right: 120 },
+      verticalAlign: VerticalAlign.CENTER,
+      children: [new Paragraph({ alignment: AlignmentType.CENTER,
+        children: label.split('\n').map((l,i) => TR(l, { b: true, col: RED, brk: i > 0 })) })]
+    }),
+    new TableCell({
+      borders: BWarm, width: { size: HW, type: WidthType.DXA },
+      margins: { top: 140, bottom: 130, left: 120, right: 120 },
+      verticalAlign: VerticalAlign.CENTER,
+      children: contentParas
+    })
+  ]});
+
+  // ─── Linha de informação (label | valor) ───
+  const infoRow = (label, value) => new TableRow({ children: [
+    new TableCell({
+      borders: BWarm, width: { size: HW, type: WidthType.DXA },
+      shading: { fill: BG_SEC, type: ShadingType.CLEAR },
+      margins: { top: 110, bottom: 90, left: 110, right: 110 },
+      verticalAlign: VerticalAlign.CENTER,
+      children: [new Paragraph({ children: [TR(label, { b: true, col: RED })] })]
+    }),
+    new TableCell({
+      borders: BWarm, width: { size: HW, type: WidthType.DXA },
+      margins: { top: 110, bottom: 90, left: 110, right: 110 },
+      verticalAlign: VerticalAlign.CENTER,
+      children: [new Paragraph({ children: [TR(value, { sz: 20 })] })]
+    })
+  ]});
+
+  // ─── Caixa de escopo (FBF8F5) ───
+  const scopeBox = (text) => new Table({
+    width: { size: CW, type: WidthType.DXA }, columnWidths: [CW],
+    rows: [new TableRow({ children: [new TableCell({
+      borders: BWarm, width: { size: CW, type: WidthType.DXA },
+      shading: { fill: BG_BOX, type: ShadingType.CLEAR },
+      margins: { top: 150, bottom: 120, left: 160, right: 140 },
+      children: [new Paragraph({ children: [TR(text, { b: true, sz: 22 })] })]
+    })]})],
+  });
+
+  // ─── Item de escopo (indentado, pseudo-bullet vermelho) ───
+  const scopeItem = (text) => new Paragraph({
+    indent: { left: 227, hanging: 198 },
+    spacing: { after: 40 },
+    children: [TR('\u00b7 ', { b: true, col: RED, sz: 22 }), TR(text, { sz: 22 })]
+  });
+
+  // ─── Célula da tabela de honorários ───
+  const FEE_COLS = [2000, 1500, 6472];
+  const feeCell = (text, colW, isHdr, center) => new TableCell({
+    borders: BFee, width: { size: colW, type: WidthType.DXA },
+    shading: { fill: isHdr ? '1A3A5C' : WHITE, type: ShadingType.CLEAR },
+    margins: { top: 90, bottom: 90, left: 120, right: 120 },
+    verticalAlign: VerticalAlign.TOP,
+    children: [new Paragraph({
+      alignment: center ? AlignmentType.CENTER : AlignmentType.LEFT,
+      children: text.split('\n').map((line, i) => new TextRun({
+        text: line, bold: isHdr, size: 20, font: 'Arial',
+        color: isHdr ? WHITE : '000000', ...(i > 0 ? { break: 1 } : {})
+      }))
+    })]
+  });
+
+  const feeTable = new Table({
+    width: { size: CW, type: WidthType.DXA }, columnWidths: FEE_COLS,
+    rows: [
+      new TableRow({ tableHeader: true, children: [
+        feeCell('Modalidade', FEE_COLS[0], true, true),
+        feeCell('Valor',      FEE_COLS[1], true, true),
+        feeCell('Condição',   FEE_COLS[2], true, false),
+      ]}),
+      ...feeRows.map(r => new TableRow({ children: [
+        feeCell(r.mod, FEE_COLS[0], false, false),
+        feeCell(r.val, FEE_COLS[1], false, true),
+        feeCell(r.cond,FEE_COLS[2], false, false),
+      ]}))
+    ]
+  });
+
+  // ─── Escopo: itens selecionados ───
+  const judItems  = getCheckedTexts('checklistJudicial');
+  const extItems  = getCheckedTexts('checklistExtrajudicial');
+  const custItems = customItems.filter(Boolean);
+  const hasJud    = abrangencia !== 'extrajudicial';
+  const hasExt    = ['extrajudicial','ambos1','ambos2'].includes(abrangencia);
+  const scopePhrases = {
+    judicial1:     'todas as fases judiciais do processo em primeira instância, desde a petição inicial até a sentença',
+    judicial2:     'todas as fases judiciais do processo, incluindo as fases recursais até a segunda instância',
+    extrajudicial: 'a atuação exclusivamente extrajudicial',
+    ambos1:        'a atuação extrajudicial e todas as fases judiciais em primeira instância',
+    ambos2:        'a atuação extrajudicial e todas as fases judiciais, incluindo as fases recursais até a segunda instância',
+  };
+
+  // ─── Logo ───
+  const logoData = b64ToU8(LOGO_B64);
+
+  // ═══ FILHOS DO DOCUMENTO ═══
+  const children = [
+
+    // Bloco de título: tabela 2 colunas
+    new Table({
+      width: { size: CW, type: WidthType.DXA }, columnWidths: [HW, HW],
+      rows: [new TableRow({ children: [
+        new TableCell({
+          borders: BNone, width: { size: HW, type: WidthType.DXA },
+          margins: { top: 80, bottom: 80, left: 0, right: 80 },
+          verticalAlign: VerticalAlign.CENTER,
+          children: [new Paragraph({ spacing: { after: 0 }, children: [
+            TR('CONTRATO DE', { b: true, sz: 36 }),
+            new TextRun({ text: 'HONORÁRIOS ADVOCATÍCIOS', bold: true, size: 36, font: 'Arial', break: 1 })
+          ]})]
+        }),
+        new TableCell({
+          borders: BNone, width: { size: HW, type: WidthType.DXA },
+          shading: { fill: BG_LBL, type: ShadingType.CLEAR },
+          margins: { top: 80, bottom: 80, left: 80, right: 80 },
+          verticalAlign: VerticalAlign.CENTER,
+          children: [new Paragraph({ alignment: AlignmentType.CENTER,
+            children: [TR('= Leia o documento com atenção =', { b: true, col: RED, sz: 24 })] })]
+        }),
+      ]})]
+    }),
+    GAP(140),
+
+    // Tabela de informações (Data, Objeto)
+    new Table({
+      width: { size: CW, type: WidthType.DXA }, columnWidths: [HW, HW],
+      rows: [
+        infoRow('Data',   `Linhares - ES, ${formatDateBR(dataContrato)}`),
+        infoRow('Objeto', objeto),
+      ]
+    }),
+    GAP(220),
+
+    // SEÇÃO 1
+    SEC('1', 'QUEM SÃO AS PARTES DESTE CONTRATO', 'Identificação objetiva das partes contratantes.'),
+    GAP(100),
+
+    new Table({
+      width: { size: CW, type: WidthType.DXA }, columnWidths: [HW, HW],
+      rows: [
+        partyRow('CONTRATADA', [new Paragraph({ children: [
+          TR('MENDES ADVOCACIA', { b: true, sz: 20 }),
+          TR(', pessoa jurídica de direito privado, inscrita no CNPJ n. 33.773.685/0001-68, com endereço na Av. Rui Barbosa, 746, Sala 102, Centro, Linhares-ES, CEP: 29900-072.', { sz: 20 })
+        ]})]),
+        partyRow('CONTRATANTE\n/ CLIENTE', [new Paragraph({ children: [TR(clienteBlock, { sz: 20 })] })]),
+      ]
+    }),
+    GAP(100),
+
+    // Quebra de página antes da Seção 2
+    new Paragraph({ children: [new PageBreak()] }),
+
+    // SEÇÃO 2
+    SEC('2', 'O QUE ESTÁ SENDO TRATADO NESTE DOCUMENTO', 'Escopo da contratação e alcance dos serviços.'),
+    GAP(100),
+
+    PM([
+      { t: 'Este é o contrato de prestação de serviços de nosso escritório, ' },
+      { t: 'Mendes Advocacia', b: true },
+      { t: ', com o cliente, definindo o escopo do trabalho, abrangências, honorários, direitos e obrigações das partes.' }
+    ], { just: true, sa: 120 }),
+
+    PM([
+      { t: 'Neste contrato em específico, o ' },
+      { t: 'CONTRATANTE/CLIENTE', b: true },
+      { t: ' está contratando o escritório ' },
+      { t: 'MENDES ADVOCACIA', b: true },
+      { t: ` para a prestação de serviços jurídicos referentes à ${objeto}.` }
+    ], { just: true, sa: 140 }),
+
+    // Caixa de escopo judicial
+    ...(hasJud ? [
+      scopeBox(`O serviço compreende ${scopePhrases[abrangencia]}. Isso inclui:`),
+      ...judItems.map(t => scopeItem(t)),
+      GAP(80),
+    ] : []),
+
+    // Extrajudicial (somente)
+    ...(hasExt && !hasJud ? [
+      scopeBox(`O serviço compreende ${scopePhrases[abrangencia]}. Isso inclui:`),
+      ...extItems.map(t => scopeItem(t)),
+      GAP(80),
+    ] : []),
+
+    // Extrajudicial adicional (quando junto com judicial)
+    ...(hasExt && hasJud && extItems.length > 0 ? [
+      PT('São também do escopo dos serviços a atuação da equipe jurídica da Contratada nas atuações extrajudiciais, como tratativas e negociações com a parte contrária. Os serviços extrajudiciais incluem:', { sa: 80 }),
+      ...extItems.map(t => scopeItem(t)),
+      GAP(80),
+    ] : []),
+
+    // Itens customizados
+    ...(custItems.length > 0 ? [PT(`Estão ainda incluídos no escopo: ${custItems.join('; ')}.`, { sa: 120 })] : []),
+
+    // SEÇÃO 3
+    SEC('3', 'OS DEVERES DA MENDES ADVOCACIA', 'Compromissos profissionais assumidos na condução do caso.'),
+    GAP(100),
+    PT('Os compromissos e deveres assumidos em contrato pela Mendes Advocacia são a atuação técnica, o emprego de ética e a conduta transparente durante a prestação dos serviços.', { just: true }),
+    PT('Explicando, é dever de nosso escritório empregar o melhor da técnica jurídica na atuação do caso. A ética envolve não adotar medidas ilegais, temerárias ou de risco na condução do caso, ainda que a pedido do cliente.', { just: true }),
+    PT('Quanto à transparência, é responsabilidade da Contratada (Mendes Advocacia) manter o cliente informado sobre os pontos e momentos relevantes do processo, e tomar decisões em conjunto e em conformidade com o melhor interesse do cliente. Também é obrigação da Contratada fazer a adequada gestão e acompanhamento processual, em especial quanto ao cumprimento de prazos judiciais obrigatórios, sob pena de responsabilidade civil e ética, além do direito à rescisão do contrato, sem prejuízo a eventuais perdas e danos.', { just: true, sa: 200 }),
+
+    // SEÇÃO 4
+    SEC('4', 'OS DEVERES DO CLIENTE', 'Responsabilidades necessárias para o bom andamento do trabalho jurídico.'),
+    GAP(100),
+    PT('Honorários', { b: true, sa: 60 }),
+    PT('Os pagamentos dos honorários conforme os valores e datas ajustados no contrato. O inadimplemento pode resultar na suspensão dos trabalhos, com eventual renúncia ao mandato nos autos.', { just: true, sa: 140 }),
+    PT('Taxas Judiciais', { b: true, sa: 60 }),
+    PT('As taxas (custas) processuais, se houverem, são arcadas pelo cliente. Quando exigidas pelo Poder Judiciário, caberá ao escritório contratado comunicar ao cliente, gerar as guias e encaminhá-las para pagamento no prazo. As custas processuais não integram os honorários e nem tampouco os advogados contratados poderão recebê-las de qualquer modo.', { just: true, sa: 140 }),
+    PT('Informações e Documentos', { b: true, sa: 60 }),
+    PT('Os processos dependem de provas. Por isso é importante que o cliente (contratante) atenda às solicitações de informações e documentos da contratada para subsidiar e fortalecer o processo em seu próprio benefício. Em algumas situações, haverá a necessidade de cumprimento das solicitações em prazos específicos, em razão dos prazos legais designados no processo.', { just: true, sa: 200 }),
+
+    // SEÇÃO 5
+    SEC('5', 'DESPESAS E HONORÁRIOS', 'Estrutura financeira da contratação.'),
+    GAP(100),
+    PM([
+      { t: 'Pelos serviços profissionais dos ' }, { t: 'ADVOGADOS CONTRATADOS', b: true },
+      { t: ', ajustam-se com o ' }, { t: 'CONTRATANTE', b: true },
+      { t: ' os seguintes honorários advocatícios:' }
+    ], { just: true, sa: 160 }),
+    feeTable,
+    GAP(120),
+    PT('Observação: Sabemos que não irá ocorrer, porém é preciso constar em contrato que o eventual atraso nos honorários poderá acarretar: cobrança de multa de 5% sobre o valor da parcela, mais juros de 1% ao mês; negativações a partir do trigésimo dia ao vencimento; suspensão dos trabalhos e revogação do mandato.', { sz: 20, col: '555555', just: true, sa: 120 }),
+    PT('Não serão adicionados quaisquer valores de honorários ao cliente em razão do tempo, da complexidade, da quantidade de reuniões ou das medidas judiciais ou extrajudiciais que precisem ser tomadas no curso do caso até a sentença.', { just: true, sa: 120 }),
+    PM([
+      { t: 'NÃO ESTÃO inclusas nos honorários as custas judiciais do processo.', b: true },
+      { t: ' Estas custas, caso existam, serão pagas por guias emitidas pelo Poder Judiciário e pagas pelo cliente.' }
+    ], { just: true, sa: 200 }),
+
+    // SEÇÃO 6
+    SEC('6', 'RESCISÃO', 'Hipóteses de encerramento contratual e seus efeitos.'),
+    GAP(100),
+    PT('Esperamos que não aconteça, mas, se por alguma razão esse contrato precisar ser rescindido, as hipóteses são as seguintes:', { just: true, sa: 100 }),
+    PT('CULPA DO CONTRATADO (MENDES ADVOCACIA)', { b: true, sa: 60 }),
+    PT('É motivo para rescisão contratual a perda de prazos, ou o não cumprimento das obrigações constantes neste contrato, gerando ao Contratante o direito de rescisão do contrato, com apuração de eventuais devoluções de honorários até o momento do serviço prestado; podendo ainda os advogados serem responsabilizados por perdas e danos que causarem ao cliente.', { just: true, sa: 140 }),
+    PT('SEM CULPA', { b: true, sa: 60 }),
+    PT('Na hipótese de ser cassada ou revogada a procuração sem culpa dos ADVOGADOS CONTRATADOS, ou ainda no caso de não prosseguir no feito por qualquer motivo que independa da vontade dos ADVOGADOS CONTRATADOS, e até no caso de desfazimento do presente contrato sem justa causa, ou se o CONTRATANTE de maneira expressa ou tácita demonstrar interesse em rescindir o presente contrato sem motivo grave causado pelos ADVOGADOS CONTRATADOS, o CONTRATANTE pagará ao ADVOGADO CONTRATADO o valor TOTAL dos honorários aqui convencionados, bem como os que forem pelo Juiz arbitrados pelo princípio da sucumbência.', { just: true, sa: 200 }),
+
+    // SEÇÃO 7
+    SEC('7', 'FORO', 'Definição do foro de eleição.'),
+    GAP(100),
+    PT('Fica eleito o foro da Comarca de Linhares - ES, para dirimir quaisquer conflitos oriundos do presente contrato, não obstante a idoneidade e sinceridade de propósito de ambas as partes.', { just: true, sa: 120 }),
+    PT('As partes, por estarem de pleno acordo, firmam o presente contrato para que o mesmo surta os seus legais efeitos.', { just: true, sa: 320 }),
+    PT(`Linhares - ES, ${formatDateBR(dataContrato)}`, { center: true, sa: 520 }),
+
+    // Assinaturas: tabela 2 colunas
+    new Table({
+      width: { size: CW, type: WidthType.DXA }, columnWidths: [HW, HW],
+      rows: [new TableRow({ children: [
+        new TableCell({
+          borders: BNone, width: { size: HW, type: WidthType.DXA },
+          margins: { top: 0, bottom: 0, left: 0, right: 60 },
+          children: [
+            PT('__________________________________', { center: true, sa: 60 }),
+            PT('CLEYLTON MENDES PASSOS',             { b: true, center: true, sa: 40 }),
+            PT('OAB/ES 13.595',                      { center: true, sa: 40 }),
+            PT('Contratado / Sócio — Mendes Advocacia', { center: true, sa: 0 }),
+          ]
+        }),
+        new TableCell({
+          borders: BNone, width: { size: HW, type: WidthType.DXA },
+          margins: { top: 0, bottom: 0, left: 60, right: 0 },
+          children: [
+            PT('__________________________________', { center: true, sa: 60 }),
+            PT('CONTRATANTE / CLIENTE',               { b: true, center: true, sa: 40 }),
+            PT(clienteNome,                            { center: true, sa: 0 }),
+          ]
+        }),
+      ]})]
+    }),
+  ];
+
+  // ─── Montar documento ───
+  const doc = new Document({
+    sections: [{
+      headers: {
+        default: new Header({
+          children: [new Paragraph({
+            spacing: { after: 0 },
+            children: [new ImageRun({ data: logoData, transformation: { width: 200, height: 66 }, type: 'png' })]
+          })]
+        })
+      },
+      properties: {
+        page: {
+          size:   { width: 11906, height: 16838 },
+          margin: { top: 1440, right: 967, bottom: 1440, left: 967, header: 720 }
+        }
+      },
+      children
+    }]
+  });
+
+  const blob = await Packer.toBlob(doc);
+  const url  = URL.createObjectURL(blob);
+  const a    = Object.assign(window.document.createElement('a'), {
+    href: url,
+    download: `Contrato - ${clienteNome || 'Cliente'} - ${dataContrato.split('-').reverse().join('_')}.docx`
+  });
+  window.document.body.appendChild(a);
+  a.click();
+  window.document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
