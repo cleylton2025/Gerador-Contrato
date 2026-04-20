@@ -7,16 +7,16 @@
   <script src="docx.js"></script>
   <style>
     :root {
-      --primary:       #6B1826;
-      --primary-light: #8B2233;
-      --accent:        #B12229;
-      --bg:            #F7F4F2;
-      --card:          #FFFFFF;
-      --text:          #2E2828;
-      --muted:         #8A7E7A;
-      --border:        #E5DDD9;
+      --primary:       #1a3a5c;
+      --primary-light: #2a5a8c;
+      --accent:        #c8a84b;
+      --bg:            #f0f0eb;
+      --card:          #ffffff;
+      --text:          #2c2c2c;
+      --muted:         #777;
+      --border:        #ddd;
       --green:         #2e7d32;
-      --red:           #B12229;
+      --red:           #c0392b;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -40,16 +40,17 @@
       margin: 0 auto;
       display: flex;
       align-items: center;
-      gap: 18px;
+      gap: 14px;
     }
     .header-logo {
-      height: 46px;
-      width: auto;
-      border-radius: 4px;
+      height: 42px;
+      width: 42px;
+      border-radius: 8px;
       flex-shrink: 0;
+      opacity: .92;
     }
-    .header-text h1 { font-size: 1.1rem; font-weight: 700; letter-spacing: .5px; }
-    .header-text p  { font-size: .78rem; opacity: .6; margin-top: 3px; }
+    .header-text h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: .5px; }
+    .header-text p  { font-size: .8rem; opacity: .65; margin-top: 3px; }
 
     /* ── LAYOUT ── */
     .container { max-width: 880px; margin: 0 auto; padding: 32px 20px 60px; }
@@ -73,9 +74,8 @@
     .card-header .num {
       width: 24px; height: 24px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.18);
-      color: white;
-      border: 1.5px solid rgba(255,255,255,0.35);
+      background: var(--accent);
+      color: var(--primary);
       font-size: .78rem; font-weight: 800;
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
@@ -93,7 +93,7 @@
 
     label.field-label {
       font-size: .76rem; font-weight: 700;
-      color: #4A3A38; text-transform: uppercase; letter-spacing: .4px;
+      color: var(--primary); text-transform: uppercase; letter-spacing: .4px;
     }
 
     input[type="text"],
@@ -156,8 +156,8 @@
       transition: all .18s;
       user-select: none;
     }
-    .scope-option:hover { border-color: var(--primary-light); background: #FDF8F7; }
-    .scope-option.selected { border-color: var(--primary); background: #FAF0EF; }
+    .scope-option:hover { border-color: var(--primary-light); background: #f7f9fc; }
+    .scope-option.selected { border-color: var(--primary); background: #eef2f8; }
     .scope-option input[type="radio"] { accent-color: var(--primary); width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; }
     .scope-option span { font-size: .88rem; }
 
@@ -173,8 +173,8 @@
       transition: all .18s;
       user-select: none;
     }
-    .check-item:hover { border-color: var(--primary-light); background: #FDF8F7; }
-    .check-item.checked { border-color: var(--primary); background: #FAF0EF; }
+    .check-item:hover { border-color: var(--primary-light); background: #f7f9fc; }
+    .check-item.checked { border-color: var(--primary); background: #eef2f8; }
     .check-item input[type="checkbox"] {
       width: 16px; height: 16px; flex-shrink: 0; margin-top: 2px;
       cursor: pointer; accent-color: var(--primary);
@@ -196,8 +196,8 @@
     .custom-item {
       display: flex; align-items: center; justify-content: space-between;
       padding: 8px 12px;
-      background: #F9F6F5;
-      border: 1.5px solid var(--border);
+      background: #fffbf0;
+      border: 1.5px solid var(--accent);
       border-radius: 6px; margin-top: 6px;
       font-size: .86rem;
     }
@@ -216,7 +216,7 @@
     .fee-header {
       display: flex; align-items: center; gap: 12px;
       padding: 12px 16px;
-      background: #F9F6F5;
+      background: #f7f8fb;
       cursor: pointer;
       user-select: none;
     }
@@ -264,7 +264,7 @@
     .generate-btn {
       display: block; width: 100%;
       padding: 15px;
-      background: var(--accent); color: #ffffff;
+      background: var(--accent); color: var(--primary);
       border: none; border-radius: 8px;
       font-size: 1rem; font-weight: 800;
       cursor: pointer; letter-spacing: .6px;
@@ -273,9 +273,9 @@
       margin-top: 8px;
     }
     .generate-btn:hover:not(:disabled) {
-      background: var(--primary);
+      background: #d4a93c;
       transform: translateY(-1px);
-      box-shadow: 0 4px 14px rgba(107,24,38,.25);
+      box-shadow: 0 4px 14px rgba(0,0,0,.15);
     }
     .generate-btn:disabled { opacity: .7; cursor: wait; transform: none; }
 
@@ -283,7 +283,7 @@
     @media (max-width: 620px) {
       .cols-2, .cols-3 { grid-template-columns: 1fr; }
       header { padding: 12px 18px; }
-      .header-logo { height: 36px; }
+      .header-logo { height: 34px; width: 34px; }
       .container { padding: 18px 14px 50px; }
     }
   </style>
@@ -292,10 +292,10 @@
 
 <header>
   <div class="header-inner">
-    <img src="logo.jpg" alt="Mendes Advocacia" class="header-logo">
+    <img src="icon.png" alt="Mendes Advocacia" class="header-logo">
     <div class="header-text">
-      <h1>Gerador de Contratos de Honorários</h1>
-      <p>Mendes Advocacia — Linhares, ES</p>
+      <h1>Mendes Advocacia — Gerador de Contratos</h1>
+      <p>Contrato de Honorários Advocatícios</p>
     </div>
   </div>
 </header>
