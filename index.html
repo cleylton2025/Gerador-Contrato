@@ -7,16 +7,16 @@
   <script src="docx.js"></script>
   <style>
     :root {
-      --primary:       #1a3a5c;
-      --primary-light: #2a5a8c;
-      --accent:        #c8a84b;
-      --bg:            #f0f0eb;
+      --primary:       #6B1826;
+      --primary-light: #8B2233;
+      --accent:        #B12229;
+      --bg:            #F5EFE9;
       --card:          #ffffff;
-      --text:          #2c2c2c;
-      --muted:         #777;
-      --border:        #ddd;
+      --text:          #2C2020;
+      --muted:         #9B8880;
+      --border:        #DDD5CE;
       --green:         #2e7d32;
-      --red:           #c0392b;
+      --red:           #B12229;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -32,11 +32,24 @@
     header {
       background: var(--primary);
       color: white;
-      padding: 18px 40px;
+      padding: 14px 40px;
       border-bottom: 3px solid var(--accent);
     }
-    header h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: .5px; }
-    header p  { font-size: .8rem; opacity: .65; margin-top: 3px; }
+    .header-inner {
+      max-width: 880px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .header-logo {
+      height: 46px;
+      width: auto;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+    .header-text h1 { font-size: 1.1rem; font-weight: 700; letter-spacing: .5px; }
+    .header-text p  { font-size: .78rem; opacity: .6; margin-top: 3px; }
 
     /* ── LAYOUT ── */
     .container { max-width: 880px; margin: 0 auto; padding: 32px 20px 60px; }
@@ -142,8 +155,8 @@
       transition: all .18s;
       user-select: none;
     }
-    .scope-option:hover { border-color: var(--primary-light); background: #f7f9fc; }
-    .scope-option.selected { border-color: var(--primary); background: #eef2f8; }
+    .scope-option:hover { border-color: var(--primary-light); background: #fdf5f3; }
+    .scope-option.selected { border-color: var(--primary); background: #f7eceb; }
     .scope-option input[type="radio"] { accent-color: var(--primary); width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; }
     .scope-option span { font-size: .88rem; }
 
@@ -159,8 +172,8 @@
       transition: all .18s;
       user-select: none;
     }
-    .check-item:hover { border-color: var(--primary-light); background: #f7f9fc; }
-    .check-item.checked { border-color: var(--primary); background: #eef2f8; }
+    .check-item:hover { border-color: var(--primary-light); background: #fdf5f3; }
+    .check-item.checked { border-color: var(--primary); background: #f7eceb; }
     .check-item input[type="checkbox"] {
       width: 16px; height: 16px; flex-shrink: 0; margin-top: 2px;
       cursor: pointer; accent-color: var(--primary);
@@ -182,7 +195,7 @@
     .custom-item {
       display: flex; align-items: center; justify-content: space-between;
       padding: 8px 12px;
-      background: #fffbf0;
+      background: #FBF5F2;
       border: 1.5px solid var(--accent);
       border-radius: 6px; margin-top: 6px;
       font-size: .86rem;
@@ -202,7 +215,7 @@
     .fee-header {
       display: flex; align-items: center; gap: 12px;
       padding: 12px 16px;
-      background: #f7f8fb;
+      background: #FBF5F2;
       cursor: pointer;
       user-select: none;
     }
@@ -250,7 +263,7 @@
     .generate-btn {
       display: block; width: 100%;
       padding: 15px;
-      background: var(--accent); color: var(--primary);
+      background: var(--accent); color: #ffffff;
       border: none; border-radius: 8px;
       font-size: 1rem; font-weight: 800;
       cursor: pointer; letter-spacing: .6px;
@@ -259,16 +272,17 @@
       margin-top: 8px;
     }
     .generate-btn:hover:not(:disabled) {
-      background: #d4a93c;
+      background: var(--primary);
       transform: translateY(-1px);
-      box-shadow: 0 4px 14px rgba(0,0,0,.15);
+      box-shadow: 0 4px 14px rgba(107,24,38,.25);
     }
     .generate-btn:disabled { opacity: .7; cursor: wait; transform: none; }
 
     /* ── RESPONSIVE ── */
     @media (max-width: 620px) {
       .cols-2, .cols-3 { grid-template-columns: 1fr; }
-      header { padding: 14px 18px; }
+      header { padding: 12px 18px; }
+      .header-logo { height: 36px; }
       .container { padding: 18px 14px 50px; }
     }
   </style>
@@ -276,8 +290,13 @@
 <body>
 
 <header>
-  <h1>Mendes Advocacia — Gerador de Contratos</h1>
-  <p>Contrato de Honorários Advocatícios</p>
+  <div class="header-inner">
+    <img src="logo.jpg" alt="Mendes Advocacia" class="header-logo">
+    <div class="header-text">
+      <h1>Gerador de Contratos de Honorários</h1>
+      <p>Mendes Advocacia — Linhares, ES</p>
+    </div>
+  </div>
 </header>
 
 <div class="container">
@@ -1316,15 +1335,15 @@ async function _buildAndDownload() {
       headers: {
         default: new Header({
           children: [new Paragraph({
-            spacing: { after: 0 },
-            children: [new ImageRun({ data: logoData, transformation: { width: 200, height: 66 }, type: 'png' })]
+            spacing: { before: 0, after: 0 },
+            children: [new ImageRun({ data: logoData, transformation: { width: 190, height: 63 }, type: 'jpg' })]
           })]
         })
       },
       properties: {
         page: {
           size:   { width: 11906, height: 16838 },
-          margin: { top: 1440, right: 967, bottom: 1440, left: 967, header: 720 }
+          margin: { top: 1700, right: 967, bottom: 1440, left: 967, header: 720 }
         }
       },
       children
