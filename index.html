@@ -279,6 +279,16 @@
     }
     .generate-btn:disabled { opacity: .7; cursor: wait; transform: none; }
 
+    /* ── CONTRACT TYPE TABS ── */
+    .contract-tabs { display:flex; gap:10px; margin-bottom:24px; }
+    .tab-btn {
+      flex:1; padding:13px 20px; border:2px solid var(--border); border-radius:10px;
+      background:var(--card); color:var(--text); cursor:pointer;
+      font-size:.95rem; font-weight:600; transition:all .2s; text-align:center;
+    }
+    .tab-btn.active { background:var(--primary); border-color:var(--primary); color:#fff; }
+    .tab-btn:hover:not(.active) { border-color:var(--primary); color:var(--primary); }
+
     /* ── RESPONSIVE ── */
     @media (max-width: 620px) {
       .cols-2, .cols-3 { grid-template-columns: 1fr; }
@@ -295,12 +305,20 @@
     <img src="icon.png" alt="Mendes Advocacia" class="header-logo">
     <div class="header-text">
       <h1>Mendes Advocacia — Gerador de Contratos</h1>
-      <p>Contrato de Honorários Advocatícios</p>
+      <p id="headerSubtitle">Honorários Advocatícios</p>
     </div>
   </div>
 </header>
 
 <div class="container">
+
+  <!-- ── SELETOR DE TIPO DE CONTRATO ── -->
+  <div class="contract-tabs">
+    <button class="tab-btn active" id="tab-honorarios" onclick="switchContract('honorarios')">⚖️&nbsp; Honorários Advocatícios</button>
+    <button class="tab-btn" id="tab-maternidade" onclick="switchContract('maternidade')">👶&nbsp; Salário-Maternidade</button>
+  </div>
+
+  <div id="form-honorarios">
 
   <!-- ═══ CARD 1 – DADOS BÁSICOS ═══ -->
   <div class="card">
@@ -586,6 +604,78 @@
     ⬇ &nbsp;Gerar Contrato em Word (.docx)
   </button>
 
+  </div><!-- /form-honorarios -->
+
+  <!-- ═══════════════════════════════════════════════════════
+       SALÁRIO-MATERNIDADE FORM
+  ════════════════════════════════════════════════════════ -->
+  <div id="form-maternidade" style="display:none">
+
+    <div class="card">
+      <div class="card-header">
+        <div class="num">1</div>
+        <h2>Dados da Cliente</h2>
+      </div>
+      <div class="card-body">
+
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label class="field-label">Nome Completo <span style="color:var(--red)">*</span></label>
+            <input type="text" id="mat_nome" placeholder="Ex: Maria da Silva Santos">
+          </div>
+          <div class="form-group">
+            <label class="field-label">CPF <span style="color:var(--red)">*</span></label>
+            <input type="text" id="mat_cpf" placeholder="000.000.000-00">
+          </div>
+        </div>
+
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label class="field-label">Estado Civil</label>
+            <input type="text" id="mat_estadoCivil" placeholder="Ex: Casada, Solteira, União estável">
+          </div>
+          <div class="form-group">
+            <label class="field-label">Profissão</label>
+            <input type="text" id="mat_profissao" placeholder="Ex: Autônoma, Empregada doméstica, MEI">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="field-label">Endereço Completo <span style="color:var(--red)">*</span></label>
+          <input type="text" id="mat_endereco" placeholder="Rua, nº, Bairro, CEP">
+        </div>
+
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label class="field-label">Cidade / Estado <span style="color:var(--red)">*</span></label>
+            <input type="text" id="mat_cidadeEstado" placeholder="Ex: Linhares / ES">
+          </div>
+          <div class="form-group">
+            <label class="field-label">Telefone <span style="color:var(--red)">*</span></label>
+            <input type="tel" id="mat_telefone" placeholder="(27) 99999-9999">
+          </div>
+        </div>
+
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label class="field-label">E-mail</label>
+            <input type="email" id="mat_email" placeholder="cliente@email.com">
+          </div>
+          <div class="form-group">
+            <label class="field-label">Data do Contrato <span style="color:var(--red)">*</span></label>
+            <input type="date" id="mat_data">
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <button class="generate-btn" id="generateBtnMat" onclick="generateContractMat()">
+      ⬇ &nbsp;Gerar Contrato em Word (.docx)
+    </button>
+
+  </div><!-- /form-maternidade -->
+
 </div><!-- /container -->
 
 <script>
@@ -758,7 +848,14 @@ function fmtBRL(val) {
   return parseFloat(val).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-// ─── número por extenso (pt-BR) ───
+// ─── Inicializar data do contrato de maternidade ───
+document.addEventListener('DOMContentLoaded', () => {
+  const today2 = new Date().toISOString().split('T')[0];
+  const matData = document.getElementById('mat_data');
+  if (matData) matData.value = today2;
+});
+
+// ── número por extenso (pt-BR) ───
 function numWords(n) {
   n = Math.round(n);
   if (n === 0)  return 'zero';
@@ -1356,6 +1453,630 @@ async function _buildAndDownload() {
   const a    = Object.assign(window.document.createElement('a'), {
     href: url,
     download: `Contrato - ${clienteNome || 'Cliente'} - ${dataContrato.split('-').reverse().join('_')}.docx`
+  });
+  window.document.body.appendChild(a);
+  a.click();
+  window.document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════════════════════
+//  CONTRACT TYPE SWITCHER
+// ═══════════════════════════════════════════════════════
+function switchContract(mode) {
+  window.document.getElementById('form-honorarios').style.display  = mode === 'honorarios' ? 'block' : 'none';
+  window.document.getElementById('form-maternidade').style.display = mode === 'maternidade' ? 'block' : 'none';
+  window.document.getElementById('tab-honorarios').classList.toggle('active', mode === 'honorarios');
+  window.document.getElementById('tab-maternidade').classList.toggle('active', mode === 'maternidade');
+  window.document.getElementById('headerSubtitle').textContent =
+    mode === 'honorarios' ? 'Honorários Advocatícios' : 'Salário-Maternidade';
+}
+
+// ═══════════════════════════════════════════════════════
+//  GENERATE – SALÁRIO-MATERNIDADE
+// ═══════════════════════════════════════════════════════
+async function generateContractMat() {
+  const erros = [];
+  const nome         = window.document.getElementById('mat_nome').value.trim();
+  const cpf          = window.document.getElementById('mat_cpf').value.trim();
+  const endereco     = window.document.getElementById('mat_endereco').value.trim();
+  const cidadeEstado = window.document.getElementById('mat_cidadeEstado').value.trim();
+  const telefone     = window.document.getElementById('mat_telefone').value.trim();
+  const data         = window.document.getElementById('mat_data').value;
+
+  if (!nome)         erros.push('Nome completo');
+  if (!cpf)          erros.push('CPF');
+  if (!endereco)     erros.push('Endereço');
+  if (!cidadeEstado) erros.push('Cidade / Estado');
+  if (!telefone)     erros.push('Telefone');
+  if (!data)         erros.push('Data do contrato');
+
+  if (erros.length) {
+    alert('Por favor, preencha os campos obrigatórios:\n\n• ' + erros.join('\n• '));
+    return;
+  }
+
+  const btn = window.document.getElementById('generateBtnMat');
+  btn.disabled = true;
+  btn.textContent = '⏳  Gerando contrato…';
+
+  try {
+    await _buildAndDownloadMat();
+  } catch (err) {
+    console.error(err);
+    alert('Erro ao gerar o contrato:\n' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '⬇ &nbsp;Gerar Contrato em Word (.docx)';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  BUILDER – SALÁRIO-MATERNIDADE DOCX
+// ═══════════════════════════════════════════════════════
+async function _buildAndDownloadMat() {
+  const {
+    Document, Packer, Paragraph, TextRun,
+    Table, TableRow, TableCell,
+    AlignmentType, BorderStyle, WidthType, ShadingType, VerticalAlign,
+    Header, ImageRun, PageBreak
+  } = docx;
+
+  // ── Design tokens (do template de referência) ──
+  const FONT   = 'Calibri';
+  const CW     = 9506;       // largura útil A4 com margens 1200 DXA
+  const BURG   = '6E1828';   // bordô escuro
+  const NAVY   = '1A3A5C';   // azul naval
+  const GOLD   = 'C8963E';   // ouro
+  const TEAL   = '0D4040';   // verde-teal (bullets ✔)
+  const BODY_C = '2A2220';   // texto principal
+  const GRAY_C = 'A09A96';   // cinza cabeçalho
+  const BG_LBL = 'EDE3D9';   // fundo das células de rótulo
+  const BD     = 'DDD5D0';   // bordas neutras
+  const WHITE  = 'FFFFFF';
+
+  // ── Dados do formulário ──
+  const nome         = window.document.getElementById('mat_nome').value.trim();
+  const estadoCivil  = window.document.getElementById('mat_estadoCivil').value.trim();
+  const profissao    = window.document.getElementById('mat_profissao').value.trim();
+  const cpf          = window.document.getElementById('mat_cpf').value.trim();
+  const endereco     = window.document.getElementById('mat_endereco').value.trim();
+  const cidadeEstado = window.document.getElementById('mat_cidadeEstado').value.trim();
+  const telefone     = window.document.getElementById('mat_telefone').value.trim();
+  const email        = window.document.getElementById('mat_email').value.trim();
+  const dataVal      = window.document.getElementById('mat_data').value;
+
+  const nomeFirst  = nome.split(' ')[0];
+  const dataFmt    = formatDateBR(dataVal);
+  const logoData   = b64ToU8(LOGO_B64);
+
+  // ── Helpers de borda ──
+  const bdC  = (col = BD, sz = 4) => ({ style: BorderStyle.SINGLE, size: sz, color: col });
+  const bdN  = ()                  => ({ style: BorderStyle.SINGLE, size: 0,  color: WHITE });
+  const ABD  = (col = BD, sz = 4) => ({ top: bdC(col,sz), bottom: bdC(col,sz), left: bdC(col,sz), right: bdC(col,sz) });
+  const NBD  = ()                  => ({ top: bdN(), bottom: bdN(), left: bdN(), right: bdN() });
+
+  // ── TextRun helper ──
+  const R = (text, o = {}) => new TextRun({
+    text, font: FONT,
+    bold:   !!o.b,
+    italic: !!o.i,
+    size:   o.sz  || 22,
+    color:  o.col || BODY_C,
+  });
+
+  // ── Paragraph helper ──
+  const P = (children, o = {}) => new Paragraph({
+    alignment: o.center ? AlignmentType.CENTER : o.just ? AlignmentType.BOTH : AlignmentType.LEFT,
+    spacing:   { before: o.sb || 0, after: o.sa || 0 },
+    ...(o.indent ? { indent: { left: o.indent } } : {}),
+    ...(o.border ? { border: o.border } : {}),
+    ...(o.tabStops ? { tabStops: o.tabStops } : {}),
+    children: Array.isArray(children) ? children : [children]
+  });
+
+  const GAP  = (h = 160) => new Paragraph({ spacing: { before:0, after:h }, children:[R('')] });
+
+  // ── Linha divisória dourada ──
+  const GOLD_RULE = () => new Paragraph({
+    spacing: { before: 60, after: 120 },
+    border:  { bottom: { style: BorderStyle.SINGLE, size: 12, color: GOLD, space: 1 } },
+    children: [R(' ', { sz: 2 })]
+  });
+
+  // ── Cabeçalho de seção numerado ──
+  const SEC = (num, title) => new Paragraph({
+    spacing: { before: 520, after: 200 },
+    border:  { bottom: { style: BorderStyle.SINGLE, size: 6, color: BURG, space: 6 } },
+    children: [
+      new TextRun({ text: `${num}.  `, font: FONT, bold: true, color: GOLD, size: 26 }),
+      new TextRun({ text: title,        font: FONT, bold: true, color: BURG, size: 26 }),
+    ]
+  });
+
+  // ── Cabeçalho de seção sem número ──
+  const SECP = (title) => new Paragraph({
+    spacing: { before: 520, after: 200 },
+    border:  { bottom: { style: BorderStyle.SINGLE, size: 6, color: BURG, space: 6 } },
+    children: [new TextRun({ text: title, font: FONT, bold: true, color: BURG, size: 26 })]
+  });
+
+  // ── Sub-título (azul naval) ──
+  const SUB = (text) => P(R(text, { b: true, col: NAVY, sz: 24 }), { sb: 280, sa: 120 });
+
+  // ── Parágrafo de corpo (justificado) ──
+  const BP = (text, o = {}) => P(R(text, { sz: 22, col: BODY_C, ...o }), { just: true, sb: 80, sa: 80 });
+
+  // ── Bullet check (✔ verde-teal) ──
+  const BCK = (text) => new Paragraph({
+    spacing: { before: 80, after: 80 }, indent: { left: 360 },
+    children: [
+      new TextRun({ text: '✔  ', font: FONT, bold: true, color: TEAL,   size: 22 }),
+      new TextRun({ text,             font: FONT,              color: BODY_C, size: 22 }),
+    ]
+  });
+
+  // ── Bullet X (✖ bordô) ──
+  const BXX = (text) => new Paragraph({
+    spacing: { before: 80, after: 80 }, indent: { left: 360 },
+    children: [
+      new TextRun({ text: '✖  ', font: FONT, bold: true, color: BURG,   size: 22 }),
+      new TextRun({ text,             font: FONT,              color: BODY_C, size: 22 }),
+    ]
+  });
+
+  // ── Bullet ponto (●) ──
+  const BDT = (text) => new Paragraph({
+    spacing: { before: 80, after: 80 }, indent: { left: 360 },
+    children: [
+      new TextRun({ text: '●  ', font: FONT, color: BODY_C, size: 22 }),
+      new TextRun({ text,             font: FONT, color: BODY_C, size: 22 }),
+    ]
+  });
+
+  // ── Linha de tabela de identificação ──
+  const idRow = (lbl, val) => new TableRow({
+    height: { value: 480, rule: 'atLeast' },
+    children: [
+      new TableCell({
+        width: { size: 2800, type: WidthType.DXA },
+        borders: ABD(BD, 4), shading: { fill: BG_LBL, type: ShadingType.CLEAR },
+        margins: { top: 80, bottom: 80, left: 140, right: 120 },
+        verticalAlign: VerticalAlign.CENTER,
+        children: [P(R(lbl, { b: true, col: BURG, sz: 22 }))]
+      }),
+      new TableCell({
+        width: { size: 6706, type: WidthType.DXA },
+        borders: ABD(BD, 4), shading: { fill: WHITE, type: ShadingType.CLEAR },
+        margins: { top: 80, bottom: 80, left: 140, right: 120 },
+        verticalAlign: VerticalAlign.CENTER,
+        children: [P(R(val || '', { b: true, sz: 22 }))]
+      })
+    ]
+  });
+
+  const idTable = (rows) => new Table({
+    width: { size: CW, type: WidthType.DXA },
+    columnWidths: [2800, 6706],
+    rows: rows.map(([l, v]) => idRow(l, v))
+  });
+
+  // ── Linha da tabela "5 pontos" ──
+  const sumRow = (num, title, body) => new TableRow({
+    children: [
+      new TableCell({
+        width: { size: 900, type: WidthType.DXA },
+        borders: { top: bdC(BD,4), bottom: bdC(BD,4), left: bdC(BURG,16), right: bdN() },
+        shading: { fill: BG_LBL, type: ShadingType.CLEAR },
+        margins: { top: 140, bottom: 140, left: 60, right: 60 },
+        verticalAlign: VerticalAlign.CENTER,
+        children: [new Paragraph({ alignment: AlignmentType.CENTER,
+          children: [new TextRun({ text: String(num), font: FONT, bold: true, color: BURG, size: 52 })] })]
+      }),
+      new TableCell({
+        width: { size: 8606, type: WidthType.DXA },
+        borders: { top: bdC(BD,4), bottom: bdC(BD,4), left: bdN(), right: bdN() },
+        shading: { fill: WHITE, type: ShadingType.CLEAR },
+        margins: { top: 120, bottom: 120, left: 260, right: 120 },
+        children: [
+          P(R(title, { b: true, col: NAVY, sz: 22 }), { sa: 60 }),
+          P(R(body,  { col: BODY_C, sz: 20 }), { just: true }),
+        ]
+      })
+    ]
+  });
+
+  // ── Caixa de informação (tabela 1 célula) ──
+  const infoBox = (titleText, bodyParts) => {
+    const parts = Array.isArray(bodyParts) ? bodyParts : [bodyParts];
+    return new Table({
+      width: { size: CW, type: WidthType.DXA }, columnWidths: [CW],
+      rows: [new TableRow({ children: [new TableCell({
+        width: { size: CW, type: WidthType.DXA },
+        borders: { top: bdC(BD,4), bottom: bdC(BD,4), left: bdC(BURG,16), right: bdN() },
+        shading: { fill: BG_LBL, type: ShadingType.CLEAR },
+        margins: { top: 160, bottom: 160, left: 260, right: 160 },
+        children: [
+          P(R(titleText, { b: true, col: NAVY, sz: 22 }), { sa: 80 }),
+          ...parts.map(pt => P(R(pt, { col: BODY_C, sz: 20 }), { just: true, sa: 60 }))
+        ]
+      })] })]
+    });
+  };
+
+  // ── Tabela de exemplo (2 colunas, label | valor) ──
+  const exTable = (title, rows) => [
+    P(R(title, { b: true, col: NAVY, sz: 22 }), { sb: 200, sa: 80 }),
+    new Table({
+      width: { size: CW, type: WidthType.DXA }, columnWidths: [3200, 6306],
+      rows: rows.map(([l, v]) => new TableRow({ children: [
+        new TableCell({ width: { size: 3200, type: WidthType.DXA },
+          borders: ABD(BD,4), shading: { fill: BG_LBL, type: ShadingType.CLEAR },
+          margins: { top: 80, bottom: 80, left: 140, right: 120 },
+          children: [P(R(l, { b: true, col: BURG, sz: 20 }))] }),
+        new TableCell({ width: { size: 6306, type: WidthType.DXA },
+          borders: ABD(BD,4), shading: { fill: WHITE, type: ShadingType.CLEAR },
+          margins: { top: 80, bottom: 80, left: 140, right: 120 },
+          children: [P(R(v, { sz: 20 }))] }),
+      ]}))
+    })
+  ];
+
+  // ── Tabela de honorários (3 colunas) ──
+  const feeHdr = () => new TableRow({ children:
+    [['', 2000], ['Via Administrativa', 3753], ['Via Judicial', 3753]]
+    .map(([t, w]) => new TableCell({
+      width: { size: w, type: WidthType.DXA }, borders: ABD(BURG, 4),
+      shading: { fill: BURG, type: ShadingType.CLEAR },
+      margins: { top: 100, bottom: 100, left: 120, right: 120 },
+      verticalAlign: VerticalAlign.CENTER,
+      children: [P(R(t, { b: true, col: WHITE, sz: 20 }), { center: true })]
+    }))
+  });
+  const feeRow = (lbl, adm, jud) => new TableRow({ children:
+    [[lbl, 2000, BG_LBL, BURG, true], [adm, 3753, WHITE, BODY_C, false], [jud, 3753, WHITE, BODY_C, false]]
+    .map(([t, w, bg, colr, bold]) => new TableCell({
+      width: { size: w, type: WidthType.DXA }, borders: ABD(BD, 4),
+      shading: { fill: bg, type: ShadingType.CLEAR },
+      margins: { top: 100, bottom: 100, left: 120, right: 120 },
+      verticalAlign: VerticalAlign.CENTER,
+      children: [P(R(t, { b: bold, col: colr, sz: 20 }), { just: true })]
+    }))
+  });
+
+  // ════════════════════════════════════════════════════
+  //  CONSTRUÇÃO DO ARRAY DE CONTEÚDO
+  // ════════════════════════════════════════════════════
+  const children = [
+
+    // ─── CAPA ───
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before:0, after:0 },
+      children: [new ImageRun({ data: logoData, transformation: { width:320, height:103 }, type:'png' })] }),
+    GAP(80),
+    GOLD_RULE(),
+    GAP(160),
+    P(R('CONTRATO DE PRESTAÇÃO DE SERVIÇOS ADVOCATÍCIOS', { sz:28, col:BODY_C }), { center:true, sa:60 }),
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before:60, after:60 },
+      children: [new TextRun({ text: 'Salário-Maternidade', font: FONT, bold: true, color: BURG, size: 48 })] }),
+    P(R('Esfera Administrativa e Judicial', { sz:24, col:NAVY }), { center:true, sa:80 }),
+    GAP(120),
+    GOLD_RULE(),
+    GAP(160),
+    P(R('IDENTIFICAÇÃO DA CLIENTE', { b:true, sz:22, col:BURG }), { sa:100 }),
+    idTable([
+      ['Nome completo', nome],
+      ['CPF',           cpf],
+      ['Endereço',      endereco],
+      ['Cidade / Estado', cidadeEstado],
+      ['Telefone',      telefone],
+      ['E-mail',        email],
+    ]),
+    GAP(200),
+    P(R(`Linhares/ES, ${dataFmt}`, { sz:22, col:BODY_C }), { sa:60 }),
+    GAP(160),
+
+    // ─── CARTA INTRODUTÓRIA ───
+    SECP('Uma palavra antes de começarmos'),
+    GAP(80),
+    P(R(`Prezada ${nomeFirst},`, { sz:22, col:BODY_C }), { sa:100 }),
+    GAP(80),
+    BP('Seja muito bem-vinda à Mendes Advocacia.'),
+    BP('Se você está lendo este contrato, é porque chegou até nós em busca de um direito que muito provavelmente já deveria ter sido seu: o Salário-Maternidade. E nós estamos aqui, com técnica e compromisso, para caminhar com você nessa jornada.'),
+    BP('Este documento foi escrito de forma diferente dos contratos tradicionais. Sem juridiqês, sem letras miúdas e sem surpresas. Cada cláusula foi redigida em linguagem clara porque acreditamos que o seu consentimento só é verdadeiro quando você entende, de fato, o que está assinando.'),
+    BP('Aqui você vai encontrar:'),
+    BCK('O que vamos fazer por você — com detalhes e sem omissões'),
+    BCK('O que não está incluído neste contrato'),
+    BCK('Como funciona nosso atendimento e nossa comunicação'),
+    BCK('Como são calculados nossos honorários, com exemplos práticos'),
+    BCK('Respostas às dúvidas que nossas clientes mais nos fazem'),
+    GAP(120),
+    BP('Leia com tranquilidade. Pergunte o que precisar. E só assine quando estiver segura.'),
+    GAP(120),
+    BP('Com respeito e dedicação,'),
+    P(R('Cleylton Mendes', { sz:22, col:BODY_C }), { sb:80, sa:40 }),
+    P(R('Advogado | OAB/ES nº 13.595', { sz:22, col:BODY_C }), { sa:40 }),
+    P(R('Mendes Advocacia — Linhares/ES', { sz:22, col:BODY_C }), { sa:0 }),
+
+    // ─── PÁGINA 2: 5 PONTOS ───
+    new Paragraph({ children: [new PageBreak()] }),
+    SECP('Este contrato em 5 pontos'),
+    P(new TextRun({ text:'Antes de entrar nos detalhes, aqui está um resumo do que você precisa saber:', font:FONT, italic:true, color:BODY_C, size:22 }), { just:true, sb:80, sa:120 }),
+    new Table({
+      width: { size:CW, type:WidthType.DXA }, columnWidths:[900,8606],
+      rows: [
+        sumRow(1,'O Serviço que você está contratando','Este contrato é exclusivo para o Salário-Maternidade, pela via administrativa (INSS) e, se necessário, pela via judicial.'),
+        sumRow(2,'Você só paga se ganhar','Nossos honorários são de êxito. Você não paga nada antecipadamente e não paga nada se o benefício não for concedido.'),
+        sumRow(3,'A informação é sua — e só sua','Por ética e segurança, as informações sobre o seu processo são fornecidas somente a você, a titular. Nenhuma exceção.'),
+        sumRow(4,'Estamos em todo o caminho','Da análise dos seus documentos ao recebimento do benefício. Se o INSS negar, recorremos. Se precisar ir à Justiça, entramos.'),
+        sumRow(5,'Sem surpresas','Tudo o que você vai pagar — e quando vai pagar — está explicado aqui, com clareza e com exemplos práticos.'),
+      ]
+    }),
+
+    // ─── PÁGINA 3+: CLÁUSULAS ───
+    new Paragraph({ children: [new PageBreak()] }),
+
+    // ─── Seção 1: Quem somos ───
+    SEC('1','Quem somos — as partes deste contrato'),
+    SUB('Contratada — quem presta o serviço'),
+    idTable([
+      ['Razão Social',          'Mendes Advocacia'],
+      ['CNPJ',                  '33.773.685/0001-68'],
+      ['Endereço',              'Av. Rui Barbosa, nº 746, Ed. Ipê, Sala 102, Centro — Linhares/ES'],
+      ['CEP',                   '29.900-072'],
+      ['E-mail',                'contato@mendesadvocacia.net.br'],
+      ['Telefone / WhatsApp',   '(27) 3151-4101 / 27 99694-5570'],
+      ['Horário de atendimento','Segunda a sexta-feira, das 09h às 18h'],
+    ]),
+    GAP(200),
+    SUB('Contratante — você'),
+    idTable([
+      ['Nome completo',         nome],
+      ['CPF',                   cpf],
+      ['Estado civil',          estadoCivil],
+      ['Profissão',             profissao],
+      ['Endereço completo',     endereco],
+      ['Cidade / Estado / CEP', cidadeEstado],
+      ['Telefone / WhatsApp',   telefone],
+      ['E-mail',                email],
+    ]),
+
+    // ─── Seção 2: O que está sendo contratado ───
+    SEC('2','O que está sendo contratado'),
+    BP('Você está contratando a Mendes Advocacia para requerer, acompanhar e buscar a concessão do seu Salário-Maternidade junto ao INSS — tanto pela via administrativa quanto, se necessário, pela via judicial.'),
+    GAP(80),
+    infoBox('O que é o Salário-Maternidade?',
+      'O Salário-Maternidade é um benefício pago pelo INSS à trabalhadora que deu à luz, adotou ou obteve guarda judicial de uma criança. Ele garante sua renda durante o período de afastamento (120 a 180 dias, conforme o caso) e é um direito garantido pela Constituição Federal — independentemente de você ser empregada CLT, MEI, autônoma, doméstica ou trabalhadora rural.'),
+    GAP(120),
+    BP('Nosso trabalho abrange:'),
+    BCK('A via administrativa: requerimento direto ao INSS, com acompanhamento completo, cumprimento de exigências e recurso em caso de negação.'),
+    BCK('A via judicial: ingresso de ação na Justiça Federal, se o INSS manter o indeferimento ou não resolver dentro de prazo razoável.'),
+
+    // ─── Seção 3: O que fazemos ───
+    SEC('3','O que fazemos por você'),
+    BP('Quando você nos contrata, assumimos as seguintes responsabilidades:'),
+    BCK('Análise completa dos seus documentos: CNIS, Carteira de Trabalho, laudos médicos, certidões e requerimentos anteriores.'),
+    BCK('Protocolo do requerimento administrativo no INSS, via portal Meu INSS ou presencialmente, conforme o melhor caminho para o seu caso.'),
+    BCK('Acompanhamento ativo: verificamos prazos, respondemos exigências e garantimos que o seu pedido não fique parado.'),
+    BCK('Recurso administrativo em caso de negação pelo INSS — quando houver fundamento jurídico, contestamos a decisão.'),
+    BCK('Ação judicial, se necessária, com pedido de tutela de urgência quando cabível, para que você receba o quanto antes.'),
+    BCK('Acompanhamento do processo judicial até o recebimento definitivo do benefício.'),
+    BCK('Comparecimento a audiências, perícias e diligências, quando necessário.'),
+    BCK('Orientação clara sobre como agir durante o processo e o que esperar em cada etapa.'),
+    BCK('Acesso à sua conta GOV.BR e ao portal Meu INSS, exclusivamente para os fins deste contrato.'),
+    BCK('Comunicação sobre decisões relevantes, prazos e atos importantes.'),
+    GAP(100),
+    infoBox('O que significa "obrigação de meio"?',
+      'A advocacia é, por lei e por ética, uma obrigação de meio — não de resultado. Isso significa que nos comprometemos a empregar toda a nossa técnica, dedicação e cuidado no seu caso. Mas não podemos garantir o resultado final, pois a decisão cabe ao INSS ou ao Juízo. Esse é um princípio ético obrigatório para todos os advogados no Brasil. Se houver um caminho jurídico para o seu caso, nós vamos encontrá-lo — e seremos honestos quando não houver.'),
+
+    // ─── Seção 4: O que não está incluído ───
+    SEC('4','O que não está incluído neste contrato'),
+    BP('Transparência faz parte do nosso compromisso. Por isso, queremos ser claros sobre o que não faz parte deste serviço:'),
+    BXX('Assessoria sobre outros benefícios previdenciários — como aposentadoria, auxílio-doença, BPC, etc. Esses casos exigem contratos específicos.'),
+    BXX('Representação em processos trabalhistas, cíveis, criminais ou de qualquer outra natureza.'),
+    BXX('Planejamento previdenciário amplo — simulação de aposentadoria, análise de tempo de contribuição para outros fins, etc.'),
+    BXX('Atendimento fora do horário comercial (segunda a sexta, 9h às 18h) ou em finais de semana e feriados.'),
+    BXX('Fornecimento de informações sobre o processo a terceiros — marido, companheiro, familiares, amigos ou qualquer pessoa que não seja você, a titular deste contrato.'),
+
+    // ─── Seção 5: Como trabalhamos ───
+    SEC('5','Como trabalhamos — atendimento e comunicação'),
+    SUB('Formas de atendimento'),
+    BP('Atendemos de forma presencial, remota ou híbrida — conforme sua necessidade e conveniência. Documentos podem ser enviados digitalmente, sem que você precise se deslocar.'),
+    SUB('Canal e horário'),
+    BP('Nossa comunicação preferencial é por WhatsApp ou e-mail, de segunda a sexta-feira, das 09h às 18h. Retornamos mensagens dentro desse período.'),
+    GAP(100),
+    infoBox('A informação sobre o seu processo é sua — e só sua.',
+      'Por segurança, ética profissional e proteção dos seus dados pessoais, as informações sobre o andamento do seu processo serão fornecidas exclusivamente a você, a titular contratante. Não repassamos nada a maridos, companheiros, pais, filhos, amigos ou qualquer outra pessoa — mesmo que essa pessoa diga estar ligando em seu nome. Isso não é burocracia: é uma proteção sua.'),
+    GAP(100),
+    SUB('Acesso digital — GOV.BR e Meu INSS'),
+    BP('Para agilizar o processo, você nos autoriza a acessar sua conta GOV.BR e o portal Meu INSS exclusivamente para os fins deste contrato. Esse acesso é tratado com sigilo absoluto, nos termos da Lei Geral de Proteção de Dados (Lei nº 13.709/2018), e encerrado ao término do vínculo contratual.'),
+
+    // ─── Seção 6: Honorários ───
+    SEC('6','Nossos honorários — o que, quanto e quando você paga'),
+    BP('Nossos honorários são 100% de êxito. Você não paga nada antecipadamente e não paga nada se o benefício não for concedido. Simples assim.'),
+    GAP(80),
+    new Table({
+      width: { size:CW, type:WidthType.DXA }, columnWidths:[2000,3753,3753],
+      rows: [
+        feeHdr(),
+        feeRow('O que você paga',      'R$ 1.400,00 (1ª mensalidade)',               '1 benefício + 20% dos retroativos'),
+        feeRow('Quando paga',           'Na data da concessão',                       'Somente quando você receber'),
+        feeRow('Se não houver êxito',   'Nada',                                       'Nada'),
+      ]
+    }),
+    GAP(160),
+    SUB('Entendendo com exemplos práticos'),
+    ...exTable('Exemplo 1 — Via Administrativa',[
+      ['Valor do benefício (ilustrativo)', 'R$ 1.600,00 por mês × 4 meses'],
+      ['Honorários devidos',               'R$ 1.400,00 (equivalente a 1 mensalidade)'],
+      ['Quando paga',                       'Na data em que o INSS conceder o benefício'],
+      ['Você passa a receber',              'R$ 1.600,00 mensais diretamente do INSS'],
+    ]),
+    GAP(120),
+    ...exTable('Exemplo 2 — Via Judicial',[
+      ['Valor do benefício (ilustrativo)', 'R$ 1.600,00 por mês'],
+      ['Valor dos retroativos recebidos',  'R$ 9.000,00'],
+      ['Honorários: 1 mensalidade',        'R$ 1.400,00'],
+      ['Honorários: 20% dos retroativos',  'R$ 1.800,00 (20% × R$ 9.000,00)'],
+      ['Total de honorários devidos',      'R$ 3.200,00 — pagos somente quando você receber'],
+    ]),
+    GAP(120),
+    infoBox('Como o pagamento acontece na prática?',[
+      'Quando o benefício for concedido, a Mendes Advocacia poderá receber os honorários diretamente (via destaque nos autos, alvará ou RPV) e repassar a você o valor restante, com recibo. Se isso não for possível, combinamos juntos a melhor forma — sempre com transparência e sem surpresas.',
+      'Em caso de atraso no pagamento: incide multa de mora de 2%, juros de 1% ao mês e correção pelo INPC/IBGE, a partir da data de vencimento. O não pagamento pode acarretar em negativações, providências no INSS, comprometimento do recebimento dos benefícios futuros e ações judiciais.',
+    ]),
+
+    // ─── Seção 7: Responsabilidades do cliente ───
+    SEC('7','Suas responsabilidades como cliente'),
+    BP('Para que possamos trabalhar bem pelo seu caso, precisamos contar com a sua colaboração. Veja o que esperamos de você:'),
+    BCK('Fornecer documentos verdadeiros, completos e atualizados, nos prazos que solicitarmos.'),
+    BCK('Manter seus dados cadastrais sempre atualizados (telefone, endereço, e-mail). Qualquer mudança deve ser comunicada em até 3 dias úteis.'),
+    BCK('Comunicar imediatamente qualquer alteração na sua situação previdenciária: novo emprego, novo benefício, mudanças nas contribuições, etc.'),
+    BCK('Comparecer a audiências, perícias e diligências quando convocada. O não comparecimento injustificado pode prejudicar ou encerrar o seu processo.'),
+    BCK('Indicar testemunhas com dados completos com pelo menos 30 dias de antecedência, quando necessário.'),
+    BCK('Manter ativa e atualizada sua senha de acesso ao GOV.BR e comunicar qualquer alteração imediatamente.'),
+    BCK('Usar os canais oficiais do escritório (WhatsApp ou e-mail) dentro do horário de atendimento.'),
+    BCK('Não fazer acordos, não receber valores e não assinar documentos relacionados ao processo sem nossa prévia ciência e anuência.'),
+    BCK('Comunicar imediatamente ao escritório qualquer proposta, contato ou valor recebido relacionado ao processo, ainda que de forma informal.'),
+
+    // ─── Seção 8: Responsabilidades do escritório ───
+    SEC('8','Nossas responsabilidades com você'),
+    BP('Ao assinar este contrato, a Mendes Advocacia assume os seguintes compromissos:'),
+    BCK('Prestar os serviços com técnica, zelo, responsabilidade ética e dedicação.'),
+    BCK('Manter sigilo absoluto sobre todas as suas informações pessoais, documentos e sobre o conteúdo do processo.'),
+    BCK('Informá-la sobre os principais atos, decisões e diligências relevantes ao longo do processo.'),
+    BCK('Cumprir os prazos processuais com diligência e agilidade.'),
+    BCK('Usar seu login e senha do GOV.BR exclusivamente para as finalidades deste contrato.'),
+    BCK('Encerrar qualquer acesso digital às suas plataformas ao término do vínculo contratual.'),
+    BCK('Atuar sempre no melhor interesse da cliente, dentro dos limites éticos e legais da advocacia.'),
+    BCK('Ser transparentes e honestos sobre as chances e os caminhos do caso — incluindo quando a situação for desfavorável.'),
+
+    // ─── Seção 9: Dados pessoais ───
+    SEC('9','Seus dados pessoais — como os protegemos'),
+    BP('A Mendes Advocacia trata seus dados pessoais com segurança, sigilo e finalidade específica, em total conformidade com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018 — LGPD).'),
+    BDT('Os dados coletados — nome, CPF, endereço, documentos médicos, histórico contributivo e acesso ao GOV.BR — são usados exclusivamente para a prestação dos serviços jurídicos contratados.'),
+    BDT('Nenhuma informação sua será compartilhada com terceiros sem autorização expressa, salvo obrigação legal.'),
+    BDT('Ao término do contrato, você pode solicitar por escrito a exclusão definitiva dos seus dados, exceto nos casos em que a lei exige que os guardemos por determinado período.'),
+    BDT('Você autoriza o cadastro do e-mail e telefone do escritório no portal Meu INSS para recebimento de notificações e comunicações relacionadas ao seu processo, garantindo agilidade no cumprimento de prazos.'),
+
+    // ─── Seção 10: Encerramento ───
+    SEC('10','E se o contrato precisar ser encerrado?'),
+    BP('Temos plena confiança de que nossa relação será profissional, harmônica e bem-sucedida. Mas sabemos que situações excepcionais podem acontecer — e queremos que você saiba de antemão como elas seriam tratadas, com clareza e respeito.'),
+    SUB('Se você quiser encerrar o contrato'),
+    BP('Você tem esse direito a qualquer momento. Basta nos comunicar formalmente. Os serviços prestados até aquela data serão calculados de forma proporcional ao trabalho realizado, sem multas abusivas.'),
+    SUB('Se você contratar outro advogado sem nos comunicar'),
+    BP('Pedimos apenas que, antes de qualquer mudança, você nos comunique. Os honorários pelos serviços já prestados permanecem devidos — não como punição, mas como justa remuneração pelo trabalho realizado até então. Este contrato vincula você exclusivamente à Mendes Advocacia para os serviços aqui descritos, e o ingresso de outro profissional sem nossa ciência implica o vencimento dos honorários proporcionais devidos.'),
+    SUB('Se precisarmos encerrar o contrato por nossa parte'),
+    BP('Em situações muito excepcionais — como perda de confiança mútua ou impossibilidade técnica de continuar — a Mendes Advocacia poderá rescindir o contrato mediante notificação escrita com no mínimo 10 dias de antecedência, sem prejuízo aos seus direitos e sem custo algum para você.'),
+    GAP(100),
+    infoBox('Foro de Eleição',
+      'Esperamos que nunca seja necessário. Mas se houver qualquer impasse que exija solução judicial, fica eleito o Foro da Comarca de Linhares — ES para dirimir quaisquer dúvidas ou conflitos decorrentes deste contrato.'),
+
+    // ─── Seção 11: FAQ ───
+    SEC('11','Perguntas frequentes — FAQ'),
+    BP('As dúvidas abaixo são as que nossas clientes mais nos fazem. Se a sua não estiver aqui, é só perguntar.'),
+    GAP(80),
+    infoBox('1.  Quanto tempo leva para receber o Salário-Maternidade?',
+      'Depende do caminho. Na via administrativa, o INSS tem até 30 dias para analisar o pedido. Se houver recurso ou a via judicial for necessária, o prazo pode se estender. Você será informada em cada etapa relevante.'),
+    GAP(60),
+    infoBox('2.  O que acontece se o INSS negar meu pedido?',
+      'Analisamos o motivo da negação com cuidado. Se houver fundamento, interpomos recurso administrativo. Se o INSS mantiver o indeferimento, avaliamos o ingresso de ação judicial. Você nunca será abandonada no meio do caminho.'),
+    GAP(60),
+    infoBox('3.  Preciso ir pessoalmente ao escritório?',
+      'Não necessariamente. Atendemos de forma presencial, remota ou híbrida. Documentos podem ser enviados por WhatsApp ou e-mail. Se for necessária uma reunião presencial, avisamos com antecedência.'),
+    GAP(60),
+    infoBox('4.  Com que frequência recebo atualizações do processo?',
+      'Você é comunicada sempre que houver movimentação relevante. Além disso, pode entrar em contato pelo WhatsApp ou e-mail do escritório durante o horário de atendimento para solicitar informações a qualquer momento.'),
+    GAP(60),
+    infoBox('5.  Posso pedir para meu marido ou familiar ligar para saber do processo?',
+      'Não. Por segurança, ética e proteção dos seus dados, as informações são fornecidas exclusivamente a você. Mesmo que a pessoa diga estar ligando em seu nome, não podemos atendê-la. Isso é uma proteção sua, não uma burocracia.'),
+    GAP(60),
+    infoBox('6.  Quando e como pago os honorários?',
+      'Você paga somente quando receber o benefício. Na via administrativa: o equivalente a 1 mensalidade. Na via judicial: 1 mensalidade mais 20% dos valores retroativos. Os detalhes e exemplos estão na Seção 6 deste contrato.'),
+    GAP(60),
+    infoBox('7.  E se eu quiser encerrar o contrato?',
+      'Você tem esse direito. Basta nos comunicar formalmente. Os serviços prestados até então serão calculados de forma proporcional. Não cobramos multa rescisória por desistência.'),
+    GAP(60),
+    infoBox('8.  Preciso guardar os documentos que enviei para vocês?',
+      'Recomendamos que sim. Guardamos cópias enquanto durar o vínculo contratual, mas ter os originais em mãos facilita o processo e protege você em qualquer eventualidade.'),
+    GAP(60),
+    infoBox('9.  O que faço se mudar de telefone, endereço ou e-mail?',
+      'Nos comunique imediatamente, em até 3 dias úteis. A atualização dos seus dados é fundamental para que possamos mantê-la informada e cumprir prazos dentro do processo.'),
+    GAP(60),
+    infoBox('10. Posso fazer acordo com o INSS ou assinar documentos sozinha, sem consultar vocês?',
+      'Não. Qualquer acordo, recebimento de valor ou assinatura de documento relacionado ao seu processo deve contar com nossa ciência ou presença prévia. Agir de forma independente pode prejudicar seus direitos e comprometer o andamento do caso.'),
+
+    // ─── Seção 12: Assinaturas ───
+    SEC('12','Declaração e assinaturas'),
+    BP('Declaro que li este contrato na íntegra, que fui devidamente orientada sobre seu conteúdo, que compreendi os termos, os honorários e as responsabilidades de cada parte, e que assino de forma livre, consciente e sem qualquer vício de consentimento.'),
+    GAP(80),
+    BP('Declaro, ainda, estar ciente de que os serviços advocatícios constituem obrigação de meio, não de resultado, e que os riscos da demanda me foram explicados com clareza.'),
+    GAP(280),
+    P(R(`Linhares/ES, ${dataFmt}`, { sz:22, col:BODY_C }), { center:true, sa:400 }),
+
+    // Tabela de assinaturas
+    new Table({
+      width: { size:CW, type:WidthType.DXA }, columnWidths:[4600, 306, 4600],
+      rows: [new TableRow({ children: [
+        new TableCell({
+          width: { size:4600, type:WidthType.DXA }, borders: NBD(),
+          margins: { top:0, bottom:0, left:0, right:60 },
+          children: [
+            P(R('_________________________________', { col:BODY_C, sz:22 }), { center:true, sa:60 }),
+            P(R(nome, { b:true, col:BODY_C, sz:22 }), { center:true, sa:40 }),
+            P(R('CPF: ' + cpf, { col:BODY_C, sz:20 }), { center:true, sa:0 }),
+          ]
+        }),
+        new TableCell({
+          width: { size:306, type:WidthType.DXA }, borders: NBD(),
+          children: [P(R(''), {})]
+        }),
+        new TableCell({
+          width: { size:4600, type:WidthType.DXA }, borders: NBD(),
+          margins: { top:0, bottom:0, left:60, right:0 },
+          children: [
+            P(R('_________________________________', { col:BODY_C, sz:22 }), { center:true, sa:60 }),
+            P(R('Mendes Advocacia — Cleylton Mendes Passos', { b:true, col:BODY_C, sz:22 }), { center:true, sa:40 }),
+            P(R('CNPJ: 33.773.685/0001-68', { col:BODY_C, sz:20 }), { center:true, sa:0 }),
+          ]
+        }),
+      ]})]
+    }),
+    GAP(240),
+    P(new TextRun({ text:'Este contrato foi elaborado para ser lido, compreendido e guardado.', font:FONT, italic:true, color:GRAY_C, size:20 }), { center:true, sa:60 }),
+    P(R('Mendes Advocacia — (27) 3151-4101 — cleylton@mendesadvocacia.net.br', { col:GRAY_C, sz:20 }), { center:true, sa:0 }),
+  ];
+
+  // ── Cabeçalho com logo + texto itálico direita + borda inferior ──
+  const headerPara = new Paragraph({
+    spacing: { before:0, after:0 },
+    border:  { bottom: { style: BorderStyle.SINGLE, size: 6, color: BD, space: 4 } },
+    tabStops: [{ type: 'right', position: CW }],
+    children: [
+      new ImageRun({ data: logoData, transformation: { width:150, height:48 }, type:'png' }),
+      new TextRun({ text:'\tSalário-Maternidade | Contrato de Serviços Advocatícios',
+        font: FONT, italic: true, color: GRAY_C, size: 18 }),
+    ]
+  });
+
+  // ── Montar documento ──
+  const doc = new Document({
+    sections: [{
+      headers: { default: new Header({ children: [headerPara] }) },
+      properties: {
+        page: {
+          size:   { width: 11906, height: 16838 },
+          margin: { top: 1080, right: 1200, bottom: 1080, left: 1200, header: 708 }
+        }
+      },
+      children
+    }]
+  });
+
+  const blob = await Packer.toBlob(doc);
+  const url  = URL.createObjectURL(blob);
+  const a    = Object.assign(window.document.createElement('a'), {
+    href: url,
+    download: `Contrato Salário-Maternidade - ${nomeFirst} - ${dataVal.split('-').reverse().join('_')}.docx`
   });
   window.document.body.appendChild(a);
   a.click();
