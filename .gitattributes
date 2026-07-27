@@ -1,0 +1,5 @@
+# O modelo do contrato e as imagens são binários: nunca converter finais
+# de linha, sob pena de corromper o arquivo.
+*.pdf  binary
+*.png  binary
+*.jpg  binary
