@@ -1706,6 +1706,12 @@ async function _buildAndDownloadMat() {
     });
   }
 
+  // ─── Procuração: páginas seguintes, no mesmo arquivo ───
+  await matAnexarProcuracao(pdfDoc, {
+    nome, profissao, cpf, endereco, cidade, telefone,
+    dataExtenso: dataVal ? formatDateBR(dataVal) : ''
+  });
+
   // ─── Download ───
   const bytes = await pdfDoc.save();
   const blob  = new Blob([bytes], { type: 'application/pdf' });
@@ -1713,12 +1719,276 @@ async function _buildAndDownloadMat() {
   const sufixo = dataVal ? ' - ' + dataVal.split('-').reverse().join('_') : '';
   const a = Object.assign(window.document.createElement('a'), {
     href: url,
-    download: `Contrato Salário-Maternidade - ${nome || 'Cliente'}${sufixo}.pdf`
+    download: `Contrato e Procuração - Salário-Maternidade - ${nome || 'Cliente'}${sufixo}.pdf`
   });
   window.document.body.appendChild(a);
   a.click();
   window.document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════════════════════
+//  PROCURAÇÃO — anexada ao final do contrato, no mesmo PDF
+// ═══════════════════════════════════════════════════════
+//
+//  Diferente do contrato, aqui não usamos um PDF-modelo: o parágrafo do
+//  OUTORGANTE mistura nome, profissão, CPF e endereço num texto corrido,
+//  então o número de linhas muda conforme os dados e tudo abaixo precisa
+//  descer junto. Por isso o texto é composto de verdade — com quebra de
+//  linha, justificação e quebra de página automáticas.
+//
+//  Medidas tiradas do modelo .docx original (A4, Calibri Light 11pt,
+//  entrelinha 1,5, espaçamento de 6pt antes/depois de cada parágrafo).
+//  A Carlito é um clone livre da Calibri, com as mesmas métricas.
+
+const PROC = {
+  W: 595.28, H: 841.89,
+  margEsq: 85.05,   // 1701 dxa
+  margDir: 85.05,
+  margTopo: 92.15,  // 1843 dxa
+  margBase: 49.65,  //  993 dxa
+  size: 11,         // sz=22
+  sizeTitulo: 18,   // sz=36
+  entrelinha: 1.5,  // w:line=360, lineRule=auto
+  espAntes: 6,      // 120 dxa
+  espDepois: 6,
+  // timbre (posições e tamanhos do .docx)
+  cabecalho: { x: 0,     y: 0,    w: 132.3, h: 96.4 },
+  marca:     { y: 35.4,  w: 170.1, h: 45.4 },        // centralizada
+  rodape:    { x: 0,     w: 130.5, h: 96.4 }         // rente à base
+};
+PROC.larguraUtil = PROC.W - PROC.margEsq - PROC.margDir;   // 425,18 pt
+
+// Conteúdo do modelo. `b` = negrito, `i` = itálico.
+// Os marcadores entre parênteses são trocados pelos dados do formulário.
+const PROC_CORPO = [
+  { al: 'center', titulo: true, runs: [
+    { t: 'PROCURAÇÃO E TERMO DE REPRESENTAÇÃO – INSS', b: 1 } ] },
+
+  { al: 'both', runs: [
+    { t: 'OUTORGANTE', b: 1 },
+    { t: ': ' },
+    { t: '(NOME COMPLETO)', b: 1 },
+    { t: ', brasileiro(a), (PROFISSÃO), inscrito(a) no CPF n. (CPF), com endereço na (ENDEREÇO COMPLETO), (CIDADE/ESTADO), Telefone n. (TELEFONE). ' } ] },
+
+  { al: 'both', runs: [
+    { t: 'OUTORGADOS', b: 1 },
+    { t: ': ' },
+    { t: 'DR. CLEYLTON MENDES PASSOS', b: 1 },
+    { t: ', brasileiro, casado, advogado inscrito na OAB/ES nº 13.595; ' },
+    { t: 'DRA. MAYLLA LIMA VIANA, ', b: 1 },
+    { t: 'brasileira, solteira, inscrita na OAB/ES 39.381, ambos com escritório profissional na Av. Rui Barbosa, 746, Sala 102, Centro, Linhares-ES. ' } ] },
+
+  { al: 'both', runs: [
+    { t: 'PODERES', b: 1 },
+    { t: ': Os da cláusula “' },
+    { t: 'ad Judicia et extra', i: 1 },
+    { t: '”, podendo representar o outorgante e ajuizar processos Administrativos ou Judiciais em face do' },
+    { t: ' Instituto Nacional do Seguro Social – INSS', b: 1 },
+    { t: ' na defesa de seus interesses, e representa-lo da mesma forma em qualquer juízo, instância, tribunal, repartição ou órgão público (Federal, Estadual ou Municipal, autarquia, fundação público e qualquer agência do INSS, podendo promover todas as medidas judiciais e/ou administrativas necessárias, possuindo os poderes especiais para receber citação se assim o quiser, firmar compromissos, fazer acordos, confessar, transigir, receber, dar quitação, desistir, discordar, renunciar, assinar termos de compromissos, requerer benefícios, requisitar, assinar e aceitar qualquer documento, impetrar recursos nesta ou em qualquer instância, representa-lo, em qualquer foro por mais privilegiado que for, receber e sacar alvará judicial em conjunto ou separadamente, RPV’S, solicitar justiça gratuita e assinar declaração de hipossuficiência econômica, e demais atos necessários ao bom cumprimento do presente mandado. Incluem-se nos poderes dessa procuração os referentes à eventuais renuncias de valores excedentes para recebimento de valores via RPV ou qualquer outro meio. Fica autorizado a representá-lo(a) perante o INSS também por meio de' },
+    { t: ' sistemas eletrônicos, como o portal Meu INSS e demais plataformas digitais', b: 1 },
+    { t: ', inclusive mediante uso de certificado digital, login e senha da conta GOV.BR, assinatura eletrônica avançada ou facial, para solicitação de serviços, download de processos, extração de extratos, retificação de dados, cumprimento de exigências e demais medidas operacionais e técnicas necessárias ao acompanhamento e andamento dos requerimentos.' } ] },
+
+  { al: 'both', vazio: true, runs: [] },
+
+  { al: 'both', runs: [
+    { t: 'TERMO DE REPRESENTAÇÃO E AUTORIZAÇÃO DE ACESSO A INFORMAÇÕES – PODERES', b: 1 },
+    { t: ': Para me representar perante o INSS, na solicitação de serviço ou benefício indicado, e autorizo os (as) referidos (as) profissionais a terem acesso às informações pessoais necessárias e subsidiar o requerimento eletrônico do serviço contratado. ' } ] },
+
+  { al: 'both', runs: [
+    { t: 'Podendo, para tanto, praticar os atos necessários ao cumprimento deste mandado, em especial, prestar informações, acompanhar requerimentos, cumprir exigências, ter vistas e tomar ciência de decisões sobre processos de requerimento de serviços e benefícios operacionalizados pelo Instituto. Por este termo de responsabilidade, comprometo-me a comunicar ao INSS qualquer evento que possa anular esta representação, no prazo de trinta dias, a contar da data que o mesmo ocorra.' } ] },
+
+  { al: 'both', runs: [
+    { t: 'Estou ciente de que o descumprimento do compromisso assumido, estou a sujeitar-me-á às penalidades previstas nos artigos 171 e 299, do Código Penal.' } ] },
+
+  { al: 'center', vazio: true, runs: [] },
+
+  // As três linhas do bloco de assinatura (borda inferior em cada uma,
+  // exatamente como no modelo .docx).
+  { al: 'center', linha: true, runs: [ { t: 'Linhares/ES, (Data)' } ] },
+  { al: 'center', linha: true, vazio: true, runs: [] },
+  { al: 'center', linha: true, vazio: true, runs: [] },
+
+  { al: 'left', runs: [ { t: '(NOME COMPLETO)', b: 1 } ] }
+];
+
+// Carrega fontkit, as fontes Carlito e as imagens do timbre. Só é
+// chamado na primeira geração, para não pesar a abertura do site.
+let _procAssets = null;
+async function procCarregarAssets() {
+  if (_procAssets) return _procAssets;
+
+  if (typeof fontkit === 'undefined') {
+    await new Promise((ok, falha) => {
+      const s = window.document.createElement('script');
+      s.src = 'fontkit.js';
+      s.onload = ok;
+      s.onerror = () => falha(new Error('Não foi possível carregar fontkit.js'));
+      window.document.head.appendChild(s);
+    });
+  }
+
+  const buscar = async (arq) => {
+    const r = await fetch(arq);
+    if (!r.ok) throw new Error(`Não foi possível carregar ${arq} (HTTP ${r.status})`);
+    return r.arrayBuffer();
+  };
+
+  const [reg, neg, ita, cab, marca, rod] = await Promise.all([
+    buscar('Carlito-Regular.ttf'),
+    buscar('Carlito-Bold.ttf'),
+    buscar('Carlito-Italic.ttf'),
+    buscar('proc-cabecalho.png'),
+    buscar('proc-marca.jpg'),
+    buscar('proc-rodape.png')
+  ]);
+
+  _procAssets = { reg, neg, ita, cab, marca, rod };
+  return _procAssets;
+}
+
+async function matAnexarProcuracao(pdfDoc, dados) {
+  const { rgb } = PDFLib;
+  const a = await procCarregarAssets();
+
+  pdfDoc.registerFontkit(fontkit);
+  const fRegular  = await pdfDoc.embedFont(a.reg, { subset: true });
+  const fNegrito  = await pdfDoc.embedFont(a.neg, { subset: true });
+  const fItalico  = await pdfDoc.embedFont(a.ita, { subset: true });
+  const imgCab    = await pdfDoc.embedPng(a.cab);
+  const imgMarca  = await pdfDoc.embedJpg(a.marca);
+  const imgRod    = await pdfDoc.embedPng(a.rod);
+
+  const fonte = (r) => r.b ? fNegrito : (r.i ? fItalico : fRegular);
+  const TINTA = rgb(0, 0, 0);
+
+  // Substitui os marcadores do modelo pelos dados do formulário.
+  const trocar = (txt) => txt
+    .replace(/\(NOME COMPLETO\)/g,     dados.nome)
+    .replace(/\(PROFISSÃO\)/g,         dados.profissao)
+    .replace(/\(CPF\)/g,               dados.cpf)
+    .replace(/\(ENDEREÇO COMPLETO\)/g, dados.endereco)
+    .replace(/\(CIDADE\/ESTADO\)/g,    dados.cidade)
+    .replace(/\(TELEFONE\)/g,          dados.telefone)
+    .replace(/\(Data\)/g,              dados.dataExtenso);
+
+  // ─── Estado de composição ───
+  let pagina = null;
+  let y = 0;                                   // topo da linha corrente
+  const baseLimite = PROC.H - PROC.margBase;
+
+  function novaPagina() {
+    pagina = pdfDoc.addPage([PROC.W, PROC.H]);
+    // timbre
+    pagina.drawImage(imgCab, {
+      x: PROC.cabecalho.x, y: PROC.H - PROC.cabecalho.y - PROC.cabecalho.h,
+      width: PROC.cabecalho.w, height: PROC.cabecalho.h
+    });
+    pagina.drawImage(imgMarca, {
+      x: (PROC.W - PROC.marca.w) / 2, y: PROC.H - PROC.marca.y - PROC.marca.h,
+      width: PROC.marca.w, height: PROC.marca.h
+    });
+    pagina.drawImage(imgRod, {
+      x: PROC.rodape.x, y: 0,
+      width: PROC.rodape.w, height: PROC.rodape.h
+    });
+    y = PROC.margTopo;
+  }
+
+  function garantirEspaco(altura) {
+    if (!pagina || y + altura > baseLimite) novaPagina();
+  }
+
+  // Desenha uma linha já montada. `itens` = [{txt, fnt, larg}], `gaps` =
+  // quantidade de espaços entre itens, `extra` = folga a distribuir
+  // (justificação).
+  function desenharLinha(itens, x0, tamanho, extra, gaps) {
+    let x = x0;
+    const folga = (gaps > 0 && extra > 0) ? extra / gaps : 0;
+    itens.forEach((it, k) => {
+      pagina.drawText(it.txt, { x, y: PROC.H - (y + tamanho * 0.88), size: tamanho, font: it.fnt, color: TINTA });
+      x += it.larg;
+      // Só há folga onde existe um espaço de verdade. Uma troca de estilo
+      // no meio da palavra (ex.: "OUTORGANTE" em negrito + ":") tem
+      // espacoDepois = 0 e precisa continuar colada.
+      if (k < itens.length - 1 && it.espacoDepois > 0) x += it.espacoDepois + folga;
+    });
+  }
+
+  // ─── Composição parágrafo a parágrafo ───
+  for (const par of PROC_CORPO) {
+    const tamanho = par.titulo ? PROC.sizeTitulo : PROC.size;
+    const alturaLinha = tamanho * 1.22 * PROC.entrelinha;
+
+    y += PROC.espAntes;
+
+    if (par.vazio) {
+      garantirEspaco(alturaLinha);
+      if (par.linha) {
+        pagina.drawLine({
+          start: { x: PROC.margEsq,                     y: PROC.H - (y + alturaLinha) },
+          end:   { x: PROC.margEsq + PROC.larguraUtil,  y: PROC.H - (y + alturaLinha) },
+          thickness: 0.75, color: TINTA
+        });
+      }
+      y += alturaLinha + PROC.espDepois;
+      continue;
+    }
+
+    // 1) quebra os runs em palavras, preservando o estilo de cada uma
+    const palavras = [];
+    for (const r of par.runs) {
+      const txt = trocar(r.t);
+      const fnt = fonte(r);
+      for (const w of txt.split(/(\s+)/)) {
+        if (w === '' ) continue;
+        if (/^\s+$/.test(w)) { if (palavras.length) palavras[palavras.length - 1].espacoDepois = fnt.widthOfTextAtSize(' ', tamanho); continue; }
+        palavras.push({ txt: w, fnt, larg: fnt.widthOfTextAtSize(w, tamanho), espacoDepois: 0 });
+      }
+    }
+
+    // 2) monta as linhas
+    const linhas = [];
+    let atual = [], largura = 0;
+    for (const p of palavras) {
+      const adicional = (atual.length ? atual[atual.length - 1].espacoDepois : 0) + p.larg;
+      if (atual.length && largura + adicional > PROC.larguraUtil) {
+        linhas.push({ itens: atual, largura });
+        atual = [p]; largura = p.larg;
+      } else {
+        largura += adicional;
+        atual.push(p);
+      }
+    }
+    if (atual.length) linhas.push({ itens: atual, largura });
+
+    // 3) desenha
+    linhas.forEach((ln, idx) => {
+      garantirEspaco(alturaLinha);
+      const ultima = idx === linhas.length - 1;
+      let x0 = PROC.margEsq, extra = 0, gaps = 0;
+
+      if (par.al === 'center') {
+        x0 = PROC.margEsq + (PROC.larguraUtil - ln.largura) / 2;
+      } else if (par.al === 'both' && !ultima) {
+        // conta só os espaços reais, não as trocas de estilo
+        for (let k = 0; k < ln.itens.length - 1; k++) if (ln.itens[k].espacoDepois > 0) gaps++;
+        extra = PROC.larguraUtil - ln.largura;
+      }
+      desenharLinha(ln.itens, x0, tamanho, extra, gaps);
+
+      if (par.linha && ultima) {
+        pagina.drawLine({
+          start: { x: PROC.margEsq,                    y: PROC.H - (y + alturaLinha) },
+          end:   { x: PROC.margEsq + PROC.larguraUtil, y: PROC.H - (y + alturaLinha) },
+          thickness: 0.75, color: TINTA
+        });
+      }
+      y += alturaLinha;
+    });
+
+    y += PROC.espDepois;
+  }
 }
 </script>
 </body>
