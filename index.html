@@ -687,7 +687,7 @@
     </label>
 
     <button class="generate-btn" id="generateBtnMat" onclick="generateContractMat()">
-      ⬇ &nbsp;Gerar Contrato em PDF
+      ⬇ &nbsp;Gerar Contrato, Procuração e Declaração em PDF
     </button>
 
   </div><!-- /form-maternidade -->
@@ -1514,16 +1514,16 @@ async function generateContractMat() {
 
   const btn = window.document.getElementById('generateBtnMat');
   btn.disabled = true;
-  btn.textContent = '⏳  Gerando contrato…';
+  btn.textContent = '⏳  Gerando documentos…';
 
   try {
     await _buildAndDownloadMat();
   } catch (err) {
     console.error(err);
-    alert('Erro ao gerar o contrato:\n' + err.message);
+    alert('Erro ao gerar os documentos:\n' + err.message);
   } finally {
     btn.disabled = false;
-    btn.innerHTML = '⬇ &nbsp;Gerar Contrato em PDF';
+    btn.innerHTML = '⬇ &nbsp;Gerar Contrato, Procuração e Declaração em PDF';
   }
 }
 
@@ -1711,6 +1711,11 @@ async function _buildAndDownloadMat() {
     nome, profissao, cpf, endereco, cidade, data: dataVal
   });
 
+  // ─── Declaração de hipossuficiência: última página ───
+  await matAnexarDeclaracao(pdfDoc, {
+    nome, estadoCivil, profissao, cpf, endereco, cidade, data: dataVal
+  });
+
   // ─── Download ───
   const bytes = await pdfDoc.save();
   const blob  = new Blob([bytes], { type: 'application/pdf' });
@@ -1718,7 +1723,7 @@ async function _buildAndDownloadMat() {
   const sufixo = dataVal ? ' - ' + dataVal.split('-').reverse().join('_') : '';
   const a = Object.assign(window.document.createElement('a'), {
     href: url,
-    download: `Contrato e Procuração - Salário-Maternidade - ${nome || 'Cliente'}${sufixo}.pdf`
+    download: `Contrato, Procuração e Declaração - Salário-Maternidade - ${nome || 'Cliente'}${sufixo}.pdf`
   });
   window.document.body.appendChild(a);
   a.click();
@@ -1837,6 +1842,217 @@ async function matAnexarProcuracao(pdfDoc, dados) {
     draw(d.pg, d.mes, d.y, mes, { center: true });
     draw(d.pg, d.ano, d.y, ano, { center: true });
   }
+}
+
+// ═══════════════════════════════════════════════════════
+//  DECLARAÇÃO DE HIPOSSUFICIÊNCIA — última página do mesmo PDF
+// ═══════════════════════════════════════════════════════
+//
+//  Aqui não existe modelo para preencher: a página é composta do zero.
+//  Para não destoar do contrato e da procuração, ela reaproveita o papel
+//  timbrado do escritório (a logo do topo e os dois grafismos dos cantos,
+//  extraídos do modelo da procuração) e a mesma caixa de texto — margens
+//  em x = 85 e 513, título por volta de y = 108, corpo a partir de 152.
+//
+//  O texto é justificado palavra a palavra, com trechos em negrito, de
+//  modo que os destaques da declaração fiquem visíveis como no original.
+
+const DECL = {
+  margem:  { esq: 85, dir: 513 },
+  titulo:  { y: 112, size: 15 },
+  corpo:   { y: 160, size: 10.5, linha: 18, entre: 10 },
+  // Deslocamentos a partir do fim do corpo:
+  dataOff: 40,           // linha "Cidade, data."
+  fechoOff: 90,          // traço de assinatura
+  papel: {
+    logo:   { src: 'papel-logo.jpg',   x: 212.6, y:  35.4, w: 170.1, h: 45.4 },
+    topo:   { src: 'papel-topo.jpg',   x: 463.0, y:   0.3, w: 132.3, h: 96.3 },
+    rodape: { src: 'papel-rodape.jpg', x:   0.0, y: 745.0, w: 130.5, h: 96.4 }
+  }
+};
+
+async function matAnexarDeclaracao(pdfDoc, dados) {
+  const { StandardFonts, rgb } = PDFLib;
+
+  const pagina = pdfDoc.addPage([PG_W, PG_H]);
+  const reg    = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const neg    = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const INK    = rgb(0.106, 0.086, 0.078);
+
+  const larguraCaixa = DECL.margem.dir - DECL.margem.esq;
+
+  // ─── Papel timbrado ───
+  // Puramente decorativo: se as imagens não carregarem, a declaração sai
+  // sem elas em vez de derrubar a geração do documento inteiro.
+  for (const cfg of [DECL.papel.rodape, DECL.papel.topo, DECL.papel.logo]) {
+    try {
+      const r = await fetch(cfg.src);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const img = await pdfDoc.embedJpg(await r.arrayBuffer());
+      pagina.drawImage(img, {
+        x: cfg.x, y: PG_H - (cfg.y + cfg.h), width: cfg.w, height: cfg.h
+      });
+    } catch (e) {
+      console.warn('Papel timbrado da declaração não carregou:', cfg.src, e);
+    }
+  }
+
+  // Mesma convenção do resto do arquivo: `yTop` é o topo da tinta das
+  // maiúsculas; aqui convertemos para a linha de base do pdf-lib.
+  const base = (yTop, size) => PG_H - (yTop + size * CAP_RATIO - BASE_FIX);
+  const fonteDe = seg => (seg.b ? neg : reg);
+  const larguraSeg = (seg, size) => fonteDe(seg).widthOfTextAtSize(seg.t, size);
+
+  // Quebra os trechos em palavras, sem perder o negrito nem colar/soltar
+  // espaços na emenda de um trecho para o outro (ex.: a vírgula que vem
+  // logo depois de um nome em negrito continua grudada nele).
+  function tokenizar(trechos) {
+    const palavras = [];
+    let atual = null;
+    trechos.forEach(tr => {
+      const txt = matClean(tr.t);
+      txt.split(/(\s+)/).forEach(p => {
+        if (!p) return;
+        if (/^\s+$/.test(p)) { atual = null; return; }
+        if (!atual) { atual = { segs: [] }; palavras.push(atual); }
+        atual.segs.push({ t: p, b: !!tr.b });
+      });
+    });
+    palavras.forEach(p => { p.w = 0; });
+    return palavras;
+  }
+
+  // Escreve um parágrafo justificado e devolve o `yTop` da linha seguinte.
+  function paragrafo(trechos, yTop, opts) {
+    const o    = opts || {};
+    const size = o.size || DECL.corpo.size;
+    const alt  = o.linha || DECL.corpo.linha;
+    const esp  = reg.widthOfTextAtSize(' ', size);
+
+    const palavras = tokenizar(trechos);
+    palavras.forEach(p => {
+      p.w = p.segs.reduce((s, seg) => s + larguraSeg(seg, size), 0);
+    });
+
+    // Agrupa as palavras em linhas que caibam na caixa de texto.
+    const linhas = [];
+    let linha = [], larg = 0;
+    palavras.forEach(p => {
+      const nova = linha.length ? larg + esp + p.w : p.w;
+      if (linha.length && nova > larguraCaixa) {
+        linhas.push({ palavras: linha, larg });
+        linha = [p]; larg = p.w;
+      } else {
+        linha.push(p); larg = nova;
+      }
+    });
+    if (linha.length) linhas.push({ palavras: linha, larg });
+
+    linhas.forEach((l, i) => {
+      const ultima = i === linhas.length - 1;
+      let x = DECL.margem.esq;
+      let espaco = esp;
+
+      if (o.centro) {
+        x = DECL.margem.esq + (larguraCaixa - l.larg) / 2;
+      } else if (!ultima && l.palavras.length > 1) {
+        espaco = esp + (larguraCaixa - l.larg) / (l.palavras.length - 1);
+      }
+
+      const y = base(yTop + i * alt, size);
+      l.palavras.forEach((p, j) => {
+        p.segs.forEach(seg => {
+          pagina.drawText(seg.t, { x, y, size, font: fonteDe(seg), color: INK });
+          x += larguraSeg(seg, size);
+        });
+        if (j < l.palavras.length - 1) x += espaco;
+      });
+    });
+
+    return yTop + linhas.length * alt;
+  }
+
+  // ─── Dados (o que for opcional e vier vazio vira lacuna) ───
+  const lacuna      = v => (v && v.trim()) ? v.trim() : '______________________';
+  const nome        = (dados.nome || '').trim();
+  const cpf         = lacuna(dados.cpf);
+  const estadoCivil = lacuna(dados.estadoCivil);
+  const profissao   = lacuna(dados.profissao);
+  const cidade      = (dados.cidade || '').trim();
+  const endereco    = [ (dados.endereco || '').trim(), cidade ]
+                        .filter(Boolean).join(', ') || '______________________';
+
+  // ─── Título ───
+  const T = DECL.titulo;
+  const tituloTxt = matClean('DECLARAÇÃO DE HIPOSSUFICIÊNCIA ECONÔMICA');
+  let tamTitulo = T.size;
+  while (tamTitulo > 9 && neg.widthOfTextAtSize(tituloTxt, tamTitulo) > larguraCaixa) {
+    tamTitulo -= 0.25;
+  }
+  pagina.drawText(tituloTxt, {
+    x: DECL.margem.esq + (larguraCaixa - neg.widthOfTextAtSize(tituloTxt, tamTitulo)) / 2,
+    y: base(T.y, tamTitulo), size: tamTitulo, font: neg, color: INK
+  });
+
+  // ─── Corpo ───
+  let y = DECL.corpo.y;
+
+  y = paragrafo([
+    { t: 'Eu, ' }, { t: nome || '______________________', b: true },
+    { t: ', brasileiro(a), estado civil ' }, { t: estadoCivil, b: true },
+    { t: ', profissão ' }, { t: profissao, b: true },
+    { t: ', inscrito(a) no CPF sob o nº ' }, { t: cpf, b: true },
+    { t: ', residente e domiciliado(a) à ' }, { t: endereco, b: true },
+    { t: ', ' }, { t: 'DECLARO', b: true },
+    { t: ', para os devidos fins e sob as penas da lei, que ' },
+    { t: 'não disponho de recursos financeiros suficientes para arcar com as custas, ' +
+         'despesas processuais e demais encargos decorrentes de processo judicial, sem ' +
+         'prejuízo do meu próprio sustento e/ou do sustento de minha família', b: true },
+    { t: '.' }
+  ], y) + DECL.corpo.entre;
+
+  y = paragrafo([
+    { t: 'Declaro, portanto, encontrar-me em situação econômica que justifica a concessão dos ' },
+    { t: 'benefícios da gratuidade da justiça', b: true },
+    { t: ', nos termos dos artigos ' },
+    { t: '98 e seguintes do Código de Processo Civil', b: true },
+    { t: ', especialmente para fins de propositura e tramitação de ação judicial de ' +
+         'natureza previdenciária.' }
+  ], y) + DECL.corpo.entre;
+
+  y = paragrafo([
+    { t: 'Declaro, ainda, estar ciente de que a presente declaração poderá ser objeto de ' +
+         'análise pelo Poder Judiciário e que, caso necessário, poderão ser solicitados ' +
+         'documentos destinados à comprovação de minha atual condição econômica.' }
+  ], y) + DECL.corpo.entre;
+
+  y = paragrafo([
+    { t: 'Por ser expressão da verdade, firmo a presente declaração para que produza seus ' +
+         'jurídicos e legais efeitos.' }
+  ], y);
+
+  // ─── Cidade e data ───
+  y += DECL.dataOff;
+  const dataExt = dados.data ? formatDateBR(dados.data) : '____ de ______________ de ______';
+  paragrafo([
+    { t: (cidade || '______________'), b: true }, { t: ', ' },
+    { t: dataExt, b: true }, { t: '.' }
+  ], y, { centro: true });
+
+  // ─── Assinatura ───
+  y += DECL.fechoOff;
+  const meio  = DECL.margem.esq + larguraCaixa / 2;
+  const traco = 260;
+  pagina.drawLine({
+    start: { x: meio - traco / 2, y: PG_H - y },
+    end:   { x: meio + traco / 2, y: PG_H - y },
+    thickness: 0.75, color: INK
+  });
+
+  y += 16;
+  paragrafo([{ t: nome || '______________________', b: true }], y, { centro: true });
+  y += DECL.corpo.linha;
+  paragrafo([{ t: 'CPF nº ' + cpf }], y, { centro: true });
 }
 </script>
 </body>
