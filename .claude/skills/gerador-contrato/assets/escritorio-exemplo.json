@@ -1,0 +1,28 @@
+{
+  "_comentario": "Salve este arquivo como ~/.claude/gerador-contrato/escritorio.json. A skill carrega estes dados sozinha e não pergunta de novo a cada contrato.",
+  "escritorio": {
+    "nome": "SEU ESCRITÓRIO ADVOCACIA",
+    "cnpj": "00.000.000/0001-00",
+    "oab_sociedade": "OAB/UF n. 000",
+    "endereco": "Rua Exemplo, 100, Sala 1, Centro, Cidade-UF, CEP 00000-000",
+    "cidade_uf": "Cidade - UF",
+    "telefone": "(00) 00000-0000",
+    "email": "contato@seuescritorio.com.br",
+    "site": "www.seuescritorio.com.br",
+    "logo": "/caminho/absoluto/para/logo.png",
+    "pix": "00.000.000/0001-00",
+    "rodape": ""
+  },
+  "identidade_visual": {
+    "cor_primaria": "#1a3a5c",
+    "cor_destaque": "#b12229",
+    "fundo_secao": "#eee6e1",
+    "fundo_caixa": "#fbf8f5",
+    "fonte_texto": "'Segoe UI', Arial, Helvetica, sans-serif"
+  },
+  "assinatura_padrao": {
+    "nome": "NOME DO ADVOGADO",
+    "linhas": ["OAB/UF 00.000", "Sócio — Seu Escritório Advocacia"]
+  },
+  "foro_padrao": "Cidade - UF"
+}

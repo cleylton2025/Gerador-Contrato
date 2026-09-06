@@ -1,0 +1,185 @@
+{
+  "_comentario": "Ficha-exemplo (padrão-ouro): contrato de honorários advocatícios completo. Copie, troque os dados e regere. Campos com [[PREENCHER: ...]] saem destacados no documento e são listados ao final da geração.",
+
+  "escritorio": {
+    "nome": "MENDES ADVOCACIA",
+    "cnpj": "00.000.000/0001-00",
+    "endereco": "Av. Rui Barbosa, 746, Sala 102, Centro, Linhares-ES, CEP 29900-072",
+    "cidade_uf": "Linhares - ES",
+    "telefone": "(27) 3000-0000",
+    "email": "contato@escritorio.com.br",
+    "site": "www.escritorio.com.br",
+    "logo": "",
+    "pix": "00.000.000/0001-00"
+  },
+
+  "identidade_visual": {
+    "cor_primaria": "#1a3a5c",
+    "cor_destaque": "#b12229",
+    "fundo_secao": "#eee6e1",
+    "fundo_caixa": "#fbf8f5"
+  },
+
+  "documento": {
+    "titulo": "CONTRATO DE HONORÁRIOS ADVOCATÍCIOS",
+    "chamada": "= Leia o documento com atenção =",
+    "data": "2026-09-06",
+    "cidade_foro": "Linhares - ES"
+  },
+
+  "campos_topo": [
+    { "rotulo": "Data", "valor": "Linhares - ES, 6 de setembro de 2026" },
+    { "rotulo": "Objeto", "valor": "ação de cobrança em face de Construtora Exemplo Ltda." }
+  ],
+
+  "partes": {
+    "contratada": {
+      "rotulo": "CONTRATADA",
+      "nome": "MENDES ADVOCACIA",
+      "qualificacao": "sociedade de advogados, inscrita no CNPJ n. 00.000.000/0001-00 e na OAB/ES sob o n. 000, com endereço na Av. Rui Barbosa, 746, Sala 102, Centro, Linhares-ES, CEP 29900-072."
+    },
+    "contratante": {
+      "rotulo": "CONTRATANTE\n/ CLIENTE",
+      "nome": "MARIA DA SILVA SANTOS",
+      "qualificacao": "brasileira, casada, empresária, inscrita no CPF n. 000.000.000-00, residente e domiciliada na Rua das Palmeiras, 120, Centro, Linhares-ES, e-mail maria@exemplo.com.br, telefone (WhatsApp) (27) 99999-0000."
+    }
+  },
+
+  "secoes": [
+    {
+      "numero": "1",
+      "titulo": "QUEM SÃO AS PARTES DESTE CONTRATO",
+      "subtitulo": "Identificação objetiva das partes contratantes.",
+      "blocos": [ { "tipo": "partes" } ]
+    },
+    {
+      "numero": "2",
+      "titulo": "O QUE ESTÁ SENDO TRATADO NESTE DOCUMENTO",
+      "subtitulo": "Escopo da contratação e alcance dos serviços.",
+      "blocos": [
+        { "tipo": "paragrafo",
+          "texto": "Este é o contrato de prestação de serviços jurídicos da **MENDES ADVOCACIA** com o cliente, definindo o escopo do trabalho, a abrangência, os honorários, os direitos e as obrigações das partes." },
+        { "tipo": "paragrafo",
+          "texto": "Neste contrato em específico, o **CONTRATANTE/CLIENTE** está contratando a **MENDES ADVOCACIA** para a prestação de serviços jurídicos referentes à ação de cobrança em face de Construtora Exemplo Ltda." },
+        { "tipo": "caixa",
+          "texto": "O serviço compreende todas as fases judiciais do processo em primeira instância, desde a petição inicial até a sentença. Isso inclui:",
+          "itens": [
+            "elaboração e protocolo da petição inicial",
+            "acompanhamento processual e cumprimento de prazos",
+            "réplica, especificação de provas e manifestações",
+            "participação em audiências de conciliação, instrução e julgamento",
+            "acompanhamento de perícia, quando necessária"
+          ] },
+        { "tipo": "paragrafo",
+          "texto": "São também do escopo dos serviços as tratativas e negociações extrajudiciais com a parte contrária, antes ou no curso do processo." },
+        { "tipo": "caixa",
+          "texto": "Não estão abrangidos por este contrato, salvo nova contratação específica:",
+          "itens": [
+            "recursos aos Tribunais Superiores (STJ e STF)",
+            "ação rescisória e ações autônomas conexas",
+            "cumprimento de sentença em face de terceiros",
+            "defesa em eventual reconvenção"
+          ] }
+      ]
+    },
+    {
+      "numero": "3",
+      "titulo": "OS DEVERES DA CONTRATADA",
+      "subtitulo": "Compromissos profissionais assumidos na condução do caso.",
+      "blocos": [
+        { "tipo": "paragrafo",
+          "texto": "São compromissos da **CONTRATADA** a atuação técnica, a conduta ética e a transparência durante toda a prestação dos serviços." },
+        { "tipo": "paragrafo",
+          "texto": "**Técnica.** Empregar o melhor da técnica jurídica na condução do caso. **Ética.** Não adotar medidas ilegais, temerárias ou de risco, ainda que a pedido do cliente. **Transparência.** Manter o cliente informado dos pontos e momentos relevantes do processo e decidir em conjunto, conforme o seu melhor interesse." },
+        { "tipo": "paragrafo",
+          "texto": "É também obrigação da **CONTRATADA** a adequada gestão e o acompanhamento processual, em especial quanto ao cumprimento dos prazos judiciais, sob pena de responsabilidade civil e ética, além do direito do cliente à rescisão do contrato, sem prejuízo de perdas e danos." }
+      ]
+    },
+    {
+      "numero": "4",
+      "titulo": "OS DEVERES DO CLIENTE",
+      "subtitulo": "Responsabilidades necessárias para o bom andamento do trabalho jurídico.",
+      "blocos": [
+        { "tipo": "subtitulo", "texto": "Honorários" },
+        { "tipo": "paragrafo",
+          "texto": "Pagar os honorários nos valores e nas datas ajustados neste contrato. O inadimplemento pode resultar na suspensão dos trabalhos, com eventual renúncia ao mandato nos autos." },
+        { "tipo": "subtitulo", "texto": "Custas e taxas judiciais" },
+        { "tipo": "paragrafo",
+          "texto": "As custas processuais, se houver, são arcadas pelo cliente. Quando exigidas pelo Poder Judiciário, caberá à **CONTRATADA** comunicar o cliente, gerar as guias e encaminhá-las para pagamento no prazo. As custas não integram os honorários e não são recebidas pelos advogados a qualquer título." },
+        { "tipo": "subtitulo", "texto": "Informações e documentos" },
+        { "tipo": "paragrafo",
+          "texto": "Processos dependem de provas. Por isso é essencial que o cliente atenda às solicitações de informações e documentos da **CONTRATADA**, inclusive dentro dos prazos indicados, em seu próprio benefício." }
+      ]
+    },
+    {
+      "numero": "5",
+      "titulo": "DESPESAS E HONORÁRIOS",
+      "subtitulo": "Estrutura financeira da contratação.",
+      "quebra_antes": true,
+      "blocos": [
+        { "tipo": "paragrafo",
+          "texto": "Pelos serviços profissionais da **CONTRATADA**, ajustam-se com o **CONTRATANTE** os seguintes honorários advocatícios:" },
+        { "tipo": "honorarios",
+          "linhas": [
+            { "modalidade": "Entrada",
+              "valor": "R$ 2.000,00",
+              "condicao": "A quantia de R$ 2.000,00 (dois mil reais), paga até 15/09/2026, via PIX chave 00.000.000/0001-00." },
+            { "modalidade": "Parcelas mensais (3x)",
+              "valor": "R$ 800,00 /mês",
+              "condicao": "Três (3) parcelas mensais de R$ 800,00 (oitocentos reais) cada, vencendo a 1ª em 15/10/2026, a 2ª em 15/11/2026 e a 3ª em 15/12/2026, via PIX chave 00.000.000/0001-00." },
+            { "modalidade": "Honorários sobre o resultado",
+              "valor": "20%",
+              "condicao": "Ao final do processo, havendo condenação ou acordo com proveito econômico, o **CONTRATANTE** pagará 20% (vinte por cento) sobre o valor efetivamente recebido, e somente se e quando receber. Não havendo proveito econômico, nada será devido a este título." }
+          ] },
+        { "tipo": "nota",
+          "texto": "Observação: o eventual atraso no pagamento dos honorários poderá acarretar multa de 2% sobre o valor da parcela, juros de 1% ao mês e correção pelo IPCA; após 30 dias de inadimplência, suspensão dos trabalhos e renúncia ao mandato." },
+        { "tipo": "paragrafo",
+          "texto": "Não serão acrescidos honorários em razão do tempo, da complexidade, da quantidade de reuniões ou das medidas judiciais e extrajudiciais necessárias no curso do caso até a sentença." },
+        { "tipo": "paragrafo",
+          "texto": "**NÃO ESTÃO inclusas nos honorários as custas judiciais do processo.** Estas, caso existam, serão pagas por guias emitidas pelo Poder Judiciário, diretamente pelo cliente." },
+        { "tipo": "paragrafo",
+          "texto": "Os honorários de sucumbência, fixados judicialmente, pertencem exclusivamente à **CONTRATADA**, nos termos do art. 23 da Lei 8.906/94, não se confundindo com os honorários contratuais nem deles sendo abatidos." }
+      ]
+    },
+    {
+      "numero": "6",
+      "titulo": "RESCISÃO",
+      "subtitulo": "Hipóteses de encerramento contratual e seus efeitos.",
+      "blocos": [
+        { "tipo": "paragrafo",
+          "texto": "Esperamos que não aconteça, mas, se este contrato precisar ser rescindido, as hipóteses são as seguintes:" },
+        { "tipo": "subtitulo", "texto": "Culpa da CONTRATADA" },
+        { "tipo": "paragrafo",
+          "texto": "A perda de prazos, o abandono da causa ou o descumprimento das obrigações aqui assumidas dão ao **CONTRATANTE** o direito de rescindir o contrato, apurando-se os honorários devidos até o serviço efetivamente prestado, podendo ainda os advogados responder por perdas e danos." },
+        { "tipo": "subtitulo", "texto": "Sem culpa da CONTRATADA" },
+        { "tipo": "paragrafo",
+          "texto": "Revogada a procuração sem culpa da **CONTRATADA**, ou rescindido o contrato pelo **CONTRATANTE** sem justa causa, serão devidos os honorários contratuais na seguinte proporção do total ajustado: 30% até a apresentação da contestação, 60% até a sentença e 100% após a sentença — além dos honorários de sucumbência que vierem a ser arbitrados." }
+      ]
+    },
+    {
+      "numero": "7",
+      "titulo": "FORO E DISPOSIÇÕES FINAIS",
+      "subtitulo": "Definição do foro de eleição e fecho do contrato.",
+      "blocos": [
+        { "tipo": "paragrafo",
+          "texto": "As comunicações entre as partes serão feitas pelos e-mails e telefones (WhatsApp) indicados na qualificação acima, presumindo-se recebidas as mensagens entregues." },
+        { "tipo": "paragrafo",
+          "texto": "As partes reconhecem a validade da assinatura eletrônica deste instrumento, nos termos da MP 2.200-2/2001 e da Lei 14.063/2020." },
+        { "tipo": "paragrafo",
+          "texto": "Fica eleito o foro da Comarca de Linhares - ES para dirimir quaisquer conflitos oriundos do presente contrato, não obstante a idoneidade e a sinceridade de propósito de ambas as partes." },
+        { "tipo": "paragrafo",
+          "texto": "E, por estarem justas e contratadas, as partes firmam o presente instrumento para que produza seus legais efeitos." },
+        { "tipo": "paragrafo", "alinhamento": "centro",
+          "texto": "Linhares - ES, 6 de setembro de 2026." },
+        { "tipo": "assinaturas" }
+      ]
+    }
+  ],
+
+  "assinaturas": [
+    { "nome": "CLEYLTON MENDES PASSOS",
+      "linhas": ["OAB/ES 13.595", "Contratado — Mendes Advocacia"] },
+    { "nome": "MARIA DA SILVA SANTOS",
+      "linhas": ["Contratante / Cliente", "CPF 000.000.000-00"] }
+  ]
+}

@@ -1,0 +1,166 @@
+/* ═══════════════════════════════════════════════════════════════
+   Gerador de Contrato — folha de estilo de visual law
+   As cores vêm de "identidade_visual" na ficha (injetadas em :root).
+   Mexa aqui só para mudar ESTRUTURA; para cores/fontes, use a ficha.
+   ═══════════════════════════════════════════════════════════════ */
+
+@page {
+  size: A4;
+  margin: var(--margem-topo) 18mm 20mm 18mm;
+}
+
+:root {
+  --primaria:    #1a3a5c;
+  --destaque:    #b12229;
+  --texto:       #222222;
+  --fundo-secao: #eee6e1;
+  --fundo-caixa: #fbf8f5;
+  --borda:       #d8d1cb;
+  --cinza:       #6e6964;
+  --fonte-titulo: Georgia, "Times New Roman", serif;
+  --fonte-texto:  "Segoe UI", Arial, Helvetica, sans-serif;
+  --base: 10.5pt;
+  --margem-topo: 24mm;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: var(--fonte-texto);
+  font-size: var(--base);
+  line-height: 1.45;
+  color: var(--texto);
+  margin: 0;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* ── Cabeçalho e rodapé fixos (repetem em todas as páginas na impressão) ── */
+.timbre {
+  position: fixed;
+  top: -16mm; left: 0; right: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding-bottom: 3mm;
+  border-bottom: 1px solid var(--borda);
+}
+.timbre img { max-height: 13mm; max-width: 60mm; }
+.timbre .escritorio { margin-left: auto; text-align: right; font-size: 7.5pt; color: var(--cinza); line-height: 1.35; }
+.timbre .escritorio strong { color: var(--primaria); font-size: 8.5pt; display: block; }
+
+.rodape {
+  position: fixed;
+  bottom: -14mm; left: 0; right: 0;
+  padding-top: 2.5mm;
+  border-top: 1px solid var(--borda);
+  font-size: 7.5pt; color: var(--cinza); text-align: center;
+}
+
+/* ── Título do documento ── */
+.titulo-bloco {
+  display: flex; align-items: stretch; gap: 6mm;
+  margin-bottom: 6mm;
+}
+.titulo-bloco h1 {
+  flex: 1;
+  font-family: var(--fonte-titulo);
+  font-size: 19pt; font-weight: 700; line-height: 1.15;
+  margin: 0; color: var(--texto); letter-spacing: .2px;
+}
+.chamada {
+  flex: 0 0 38%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--fundo-caixa);
+  border: 1px solid var(--borda);
+  color: var(--destaque);
+  font-weight: 700; font-size: 10pt; text-align: center;
+  padding: 4mm 3mm;
+}
+
+/* ── Grade rótulo | valor ── */
+table.campos { width: 100%; border-collapse: collapse; margin-bottom: 7mm; }
+table.campos td { border: 1px solid var(--borda); padding: 2.6mm 3mm; vertical-align: middle; }
+table.campos td.rotulo {
+  width: 26%; background: var(--fundo-secao);
+  color: var(--destaque); font-weight: 700; font-size: 9pt;
+  text-transform: uppercase; letter-spacing: .3px;
+}
+
+/* ── Cabeçalho de seção ── */
+.secao { margin-top: 7mm; }
+.secao-cab {
+  background: var(--fundo-secao);
+  padding: 3mm 4mm 2.6mm;
+  page-break-after: avoid; break-after: avoid;
+  page-break-inside: avoid;
+}
+.secao-cab h2 {
+  margin: 0; font-size: 12pt; font-weight: 700;
+  color: var(--destaque); letter-spacing: .2px;
+}
+.secao-cab p { margin: 1mm 0 0; font-size: 8.5pt; color: var(--cinza); }
+.secao-corpo { padding-top: 3.5mm; }
+
+/* ── Corpo ── */
+p.par { margin: 0 0 3mm; text-align: justify; hyphens: auto; }
+p.par.centro { text-align: center; }
+p.par.esquerda { text-align: left; }
+h3.sub {
+  margin: 4mm 0 1.5mm; font-size: 10pt; font-weight: 700; color: var(--primaria);
+  page-break-after: avoid; break-after: avoid;
+}
+ul.lista { margin: 0 0 3mm; padding-left: 6mm; }
+ul.lista li { margin-bottom: 1.2mm; text-align: justify; }
+ul.lista li::marker { color: var(--destaque); }
+p.nota { font-size: 8.5pt; color: var(--cinza); text-align: justify; margin: 0 0 3mm; }
+
+/* ── Caixa de destaque ── */
+.caixa {
+  background: var(--fundo-caixa);
+  border: 1px solid var(--borda);
+  border-left: 3px solid var(--destaque);
+  padding: 3.5mm 4mm;
+  margin: 0 0 4mm;
+  page-break-inside: avoid;
+}
+.caixa > p:first-child { margin-top: 0; font-weight: 700; }
+.caixa ul { margin: 2mm 0 0; padding-left: 5mm; }
+.caixa li { margin-bottom: 1mm; text-align: justify; }
+.caixa li::marker { color: var(--destaque); }
+
+/* ── Partes ── */
+table.partes { width: 100%; border-collapse: collapse; margin-bottom: 4mm; }
+table.partes td { border: 1px solid var(--borda); padding: 3.5mm; vertical-align: middle; font-size: 9.5pt; }
+table.partes td.rotulo {
+  width: 27%; background: var(--fundo-secao); text-align: center;
+  color: var(--destaque); font-weight: 700; font-size: 9.5pt;
+}
+
+/* ── Tabelas (genérica e de honorários) ── */
+table.dados { width: 100%; border-collapse: collapse; margin: 0 0 4mm; font-size: 9pt; }
+table.dados th {
+  background: var(--primaria); color: #fff; font-weight: 700;
+  padding: 2.6mm 3mm; text-align: left; border: 1px solid var(--primaria);
+}
+table.dados td { border: 1px solid #b9b9b9; padding: 2.6mm 3mm; vertical-align: top; }
+table.dados tr { page-break-inside: avoid; }
+table.dados thead { display: table-header-group; }
+table.dados td.centro, table.dados th.centro { text-align: center; }
+table.dados td.destaque { font-weight: 700; color: var(--primaria); }
+
+/* ── Assinaturas ── */
+.assinaturas {
+  display: flex; gap: 10mm; margin-top: 18mm;
+  page-break-inside: avoid;
+}
+.assinatura { flex: 1; text-align: center; font-size: 9.5pt; }
+.assinatura .linha { border-top: 1px solid var(--texto); margin-bottom: 2mm; }
+.assinatura strong { display: block; }
+.assinatura span { display: block; color: var(--cinza); font-size: 8.5pt; }
+
+/* ── Marcador de pendência ── */
+.pendencia {
+  background: #fff3b0; color: #7a5c00; font-weight: 700;
+  padding: 0 1mm; border: 1px dashed #d4a000;
+}
+
+.quebra { page-break-before: always; break-before: page; }
