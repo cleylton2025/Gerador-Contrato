@@ -290,6 +290,11 @@
     .tab-btn.active { background:var(--primary); border-color:var(--primary); color:#fff; }
     .tab-btn:hover:not(.active) { border-color:var(--primary); color:var(--primary); }
 
+    /* ── SELEÇÃO DE DOCUMENTOS ── */
+    .docs-hint {
+      margin-top:10px; font-size:.78rem; color:var(--muted); line-height:1.45;
+    }
+
     /* ── CALIBRAÇÃO ── */
     .calib-toggle {
       display:flex; align-items:flex-start; gap:10px;
@@ -661,7 +666,7 @@
             <input type="text" id="mat_cidadeEstado" placeholder="Ex: Linhares / ES">
           </div>
           <div class="form-group">
-            <label class="field-label">Telefone <span style="color:var(--red)">*</span></label>
+            <label class="field-label">Telefone <span style="color:var(--red)" id="mat_telefoneObrig">*</span></label>
             <input type="tel" id="mat_telefone" placeholder="(27) 99999-9999">
           </div>
         </div>
@@ -680,10 +685,38 @@
       </div>
     </div>
 
-    <label class="calib-toggle">
+    <!-- ═══ CARD 2 – DOCUMENTOS A GERAR ═══ -->
+    <div class="card">
+      <div class="card-header">
+        <div class="num">2</div>
+        <h2>Documentos a Gerar</h2>
+      </div>
+      <div class="card-body">
+        <div class="checklist">
+          <label class="check-item checked">
+            <input type="checkbox" id="mat_doc_contrato" checked onchange="matAtualizarBotao()">
+            <span>Contrato de honorários — Salário-Maternidade</span>
+          </label>
+          <label class="check-item checked">
+            <input type="checkbox" id="mat_doc_procuracao" checked onchange="matAtualizarBotao()">
+            <span>Procuração e termo de representação — INSS</span>
+          </label>
+          <label class="check-item checked">
+            <input type="checkbox" id="mat_doc_declaracao" checked onchange="matAtualizarBotao()">
+            <span>Declaração de hipossuficiência econômica</span>
+          </label>
+        </div>
+        <p class="docs-hint">
+          O que estiver marcado sai num único arquivo PDF, nesta ordem. Desmarque o que
+          não for necessário para gerar só uma peça ou uma combinação delas.
+        </p>
+      </div>
+    </div>
+
+    <label class="calib-toggle" id="mat_calibrarBox">
       <input type="checkbox" id="mat_calibrar">
-      <span>Modo de calibração — desenha uma régua de 25 pt sobre as páginas preenchidas,
-      para conferir o posicionamento dos campos.</span>
+      <span>Modo de calibração — desenha uma régua de 25 pt sobre as páginas preenchidas
+      do contrato, para conferir o posicionamento dos campos.</span>
     </label>
 
     <button class="generate-btn" id="generateBtnMat" onclick="generateContractMat()">
@@ -869,6 +902,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const today2 = new Date().toISOString().split('T')[0];
   const matData = document.getElementById('mat_data');
   if (matData) matData.value = today2;
+  matAtualizarBotao();
 });
 
 // ── número por extenso (pt-BR) ───
@@ -1491,7 +1525,68 @@ function switchContract(mode) {
 // ═══════════════════════════════════════════════════════
 //  GENERATE – SALÁRIO-MATERNIDADE
 // ═══════════════════════════════════════════════════════
+//
+//  Cada peça pode ser gerada sozinha ou combinada com as outras: o que
+//  estiver marcado no card "Documentos a Gerar" entra no mesmo PDF, na
+//  ordem contrato → procuração → declaração.
+
+const MAT_DOCS = [
+  { id: 'mat_doc_contrato',   chave: 'contrato',   nome: 'Contrato'   },
+  { id: 'mat_doc_procuracao', chave: 'procuracao', nome: 'Procuração' },
+  { id: 'mat_doc_declaracao', chave: 'declaracao', nome: 'Declaração' }
+];
+
+function matSelecionados() {
+  const sel = {};
+  MAT_DOCS.forEach(d => {
+    const cb = window.document.getElementById(d.id);
+    sel[d.chave] = !cb || cb.checked;   // sem o campo na tela, gera tudo
+  });
+  return sel;
+}
+
+// "Contrato", "Contrato e Procuração", "Contrato, Procuração e Declaração"…
+function matNomesSelecionados() {
+  const sel = matSelecionados();
+  const nomes = MAT_DOCS.filter(d => sel[d.chave]).map(d => d.nome);
+  if (!nomes.length) return '';
+  if (nomes.length === 1) return nomes[0];
+  return nomes.slice(0, -1).join(', ') + ' e ' + nomes[nomes.length - 1];
+}
+
+function matRotuloBotao() {
+  const nomes = matNomesSelecionados();
+  return nomes ? `⬇ &nbsp;Gerar ${nomes} em PDF`
+               : '⬇ &nbsp;Selecione ao menos um documento';
+}
+
+function matAtualizarBotao() {
+  const btn = window.document.getElementById('generateBtnMat');
+  if (btn && !btn.disabled) btn.innerHTML = matRotuloBotao();
+
+  // A régua de calibração só tem o que marcar nas páginas do contrato.
+  const box  = window.document.getElementById('mat_calibrarBox');
+  const cal  = window.document.getElementById('mat_calibrar');
+  const temContrato = matSelecionados().contrato;
+  if (box && cal) {
+    cal.disabled = !temContrato;
+    if (!temContrato) cal.checked = false;
+    box.style.opacity       = temContrato ? '' : '.45';
+    box.style.pointerEvents = temContrato ? '' : 'none';
+  }
+
+  // O telefone só é exigido pelos quadros do contrato.
+  const obrig = window.document.getElementById('mat_telefoneObrig');
+  if (obrig) obrig.style.display = temContrato ? '' : 'none';
+}
+
 async function generateContractMat() {
+  const sel = matSelecionados();
+  if (!sel.contrato && !sel.procuracao && !sel.declaracao) {
+    alert('Selecione pelo menos um documento para gerar.');
+    return;
+  }
+
   const erros = [];
   const nome         = window.document.getElementById('mat_nome').value.trim();
   const cpf          = window.document.getElementById('mat_cpf').value.trim();
@@ -1504,7 +1599,8 @@ async function generateContractMat() {
   if (!cpf)          erros.push('CPF');
   if (!endereco)     erros.push('Endereço');
   if (!cidadeEstado) erros.push('Cidade / Estado');
-  if (!telefone)     erros.push('Telefone');
+  // O telefone só aparece nos quadros do contrato.
+  if (!telefone && sel.contrato) erros.push('Telefone');
   if (!data)         erros.push('Data do contrato');
 
   if (erros.length) {
@@ -1517,13 +1613,13 @@ async function generateContractMat() {
   btn.textContent = '⏳  Gerando documentos…';
 
   try {
-    await _buildAndDownloadMat();
+    await _buildAndDownloadMat(sel);
   } catch (err) {
     console.error(err);
     alert('Erro ao gerar os documentos:\n' + err.message);
   } finally {
     btn.disabled = false;
-    btn.innerHTML = '⬇ &nbsp;Gerar Contrato, Procuração e Declaração em PDF';
+    btn.innerHTML = matRotuloBotao();
   }
 }
 
@@ -1583,23 +1679,65 @@ function matClean(s) {
     .replace(/[^\u0020-\u007E\u00A0-\u00FF\u2013\u2014\u2018\u2019\u201C\u201D\u20AC]/g, '');
 }
 
-async function _buildAndDownloadMat() {
+async function _buildAndDownloadMat(sel) {
   if (typeof PDFLib === 'undefined') {
     throw new Error('A biblioteca pdf-lib não carregou. Recarregue a página (Ctrl+F5).');
   }
-  const { PDFDocument, StandardFonts, rgb } = PDFLib;
+  const { PDFDocument } = PDFLib;
+  const docs = sel || matSelecionados();
 
   // ─── Dados do formulário ───
   const val = id => (window.document.getElementById(id).value || '').trim();
-  const nome        = val('mat_nome');
-  const estadoCivil = val('mat_estadoCivil');
-  const profissao   = val('mat_profissao');
-  const cpf         = val('mat_cpf');
-  const endereco    = val('mat_endereco');
-  const cidade      = val('mat_cidadeEstado');
-  const telefone    = val('mat_telefone');
-  const email       = val('mat_email');
-  const dataVal     = val('mat_data');
+  const dados = {
+    nome:        val('mat_nome'),
+    estadoCivil: val('mat_estadoCivil'),
+    profissao:   val('mat_profissao'),
+    cpf:         val('mat_cpf'),
+    endereco:    val('mat_endereco'),
+    cidade:      val('mat_cidadeEstado'),
+    telefone:    val('mat_telefone'),
+    email:       val('mat_email'),
+    data:        val('mat_data')
+  };
+
+  // O contrato, quando marcado, é a base do arquivo (é ele que vem de um
+  // modelo pronto) e as outras peças entram como páginas seguintes. Sem
+  // ele, partimos de um documento vazio.
+  const pdfDoc = docs.contrato ? await matGerarContrato(dados)
+                               : await PDFDocument.create();
+
+  if (docs.procuracao) await matAnexarProcuracao(pdfDoc, dados);
+  if (docs.declaracao) await matAnexarDeclaracao(pdfDoc, dados);
+
+  // ─── Download ───
+  const bytes = await pdfDoc.save();
+  const blob  = new Blob([bytes], { type: 'application/pdf' });
+  const url   = URL.createObjectURL(blob);
+  const sufixo = dados.data ? ' - ' + dados.data.split('-').reverse().join('_') : '';
+  const a = Object.assign(window.document.createElement('a'), {
+    href: url,
+    download: `${matNomesSelecionados()} - Salário-Maternidade - ${dados.nome || 'Cliente'}${sufixo}.pdf`
+  });
+  window.document.body.appendChild(a);
+  a.click();
+  window.document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// Carrega `modelo-maternidade.pdf` e escreve os dados da cliente por cima,
+// devolvendo o documento já preenchido.
+async function matGerarContrato(d) {
+  const { PDFDocument, StandardFonts, rgb } = PDFLib;
+
+  const nome        = d.nome;
+  const estadoCivil = d.estadoCivil;
+  const profissao   = d.profissao;
+  const cpf         = d.cpf;
+  const endereco    = d.endereco;
+  const cidade      = d.cidade;
+  const telefone    = d.telefone;
+  const email       = d.email;
+  const dataVal     = d.data;
 
   const primeiroNome = nome.split(/\s+/)[0] || '';
 
@@ -1706,29 +1844,7 @@ async function _buildAndDownloadMat() {
     });
   }
 
-  // ─── Procuração: páginas seguintes, no mesmo arquivo ───
-  await matAnexarProcuracao(pdfDoc, {
-    nome, profissao, cpf, endereco, cidade, data: dataVal
-  });
-
-  // ─── Declaração de hipossuficiência: última página ───
-  await matAnexarDeclaracao(pdfDoc, {
-    nome, estadoCivil, profissao, cpf, endereco, cidade, data: dataVal
-  });
-
-  // ─── Download ───
-  const bytes = await pdfDoc.save();
-  const blob  = new Blob([bytes], { type: 'application/pdf' });
-  const url   = URL.createObjectURL(blob);
-  const sufixo = dataVal ? ' - ' + dataVal.split('-').reverse().join('_') : '';
-  const a = Object.assign(window.document.createElement('a'), {
-    href: url,
-    download: `Contrato, Procuração e Declaração - Salário-Maternidade - ${nome || 'Cliente'}${sufixo}.pdf`
-  });
-  window.document.body.appendChild(a);
-  a.click();
-  window.document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  return pdfDoc;
 }
 
 // ═══════════════════════════════════════════════════════
