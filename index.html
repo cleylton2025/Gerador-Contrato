@@ -281,9 +281,9 @@
     .generate-btn:disabled { opacity: .7; cursor: wait; transform: none; }
 
     /* ── CONTRACT TYPE TABS ── */
-    .contract-tabs { display:flex; gap:10px; margin-bottom:24px; }
+    .contract-tabs { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:24px; }
     .tab-btn {
-      flex:1; padding:13px 20px; border:2px solid var(--border); border-radius:10px;
+      flex:1 1 200px; padding:13px 20px; border:2px solid var(--border); border-radius:10px;
       background:var(--card); color:var(--text); cursor:pointer;
       font-size:.95rem; font-weight:600; transition:all .2s; text-align:center;
     }
@@ -331,6 +331,7 @@
   <div class="contract-tabs">
     <button class="tab-btn active" id="tab-honorarios" onclick="switchContract('honorarios')">⚖️&nbsp; Honorários Advocatícios</button>
     <button class="tab-btn" id="tab-maternidade" onclick="switchContract('maternidade')">👶&nbsp; Salário-Maternidade</button>
+    <button class="tab-btn" id="tab-auxilio" onclick="switchContract('auxilio')">🩹&nbsp; Auxílio-Acidente</button>
   </div>
 
   <div id="form-honorarios">
@@ -724,6 +725,145 @@
     </button>
 
   </div><!-- /form-maternidade -->
+
+  <!-- ═══════════════════════════════════════════════════════
+       AUXÍLIO-ACIDENTE FORM
+  ════════════════════════════════════════════════════════ -->
+  <div id="form-auxilio" style="display:none">
+
+    <div class="card">
+      <div class="card-header">
+        <div class="num">1</div>
+        <h2>Identificação de Quem Contrata</h2>
+      </div>
+      <div class="card-body">
+
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label class="field-label">Nome Completo <span style="color:var(--red)">*</span></label>
+            <input type="text" id="aa_nome" placeholder="Ex: João Carlos Pereira" maxlength="160">
+          </div>
+          <div class="form-group">
+            <label class="field-label">CPF <span style="color:var(--red)">*</span></label>
+            <input type="text" id="aa_cpf" placeholder="000.000.000-00" maxlength="14">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="field-label">Profissão</label>
+          <input type="text" id="aa_profissao" placeholder="Ex: Pedreiro, Motorista, Costureira" maxlength="80">
+        </div>
+
+        <div class="form-group">
+          <label class="field-label">Endereço Completo <span style="color:var(--red)">*</span></label>
+          <input type="text" id="aa_endereco" placeholder="Rua, nº, Bairro, CEP" maxlength="180">
+        </div>
+
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label class="field-label">Cidade / Estado <span style="color:var(--red)">*</span></label>
+            <input type="text" id="aa_cidadeEstado" placeholder="Ex: Linhares / ES" maxlength="100"
+                   oninput="aaEspelharLocal()">
+          </div>
+          <div class="form-group">
+            <label class="field-label">Telefone / WhatsApp <span style="color:var(--red)">*</span></label>
+            <input type="tel" id="aa_telefone" placeholder="(27) 99999-9999" maxlength="30">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="field-label">E-mail</label>
+          <input type="email" id="aa_email" placeholder="cliente@email.com" maxlength="100">
+        </div>
+
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="num">2</div>
+        <h2>Modalidade do Pedido</h2>
+      </div>
+      <div class="card-body">
+
+        <div class="scope-options">
+          <label class="scope-option selected">
+            <input type="radio" name="aa_modalidade" value="concessao" checked onchange="aaModalidadeMudou(this)">
+            <span><strong>Concessão</strong> — pedir o benefício que ainda não foi concedido</span>
+          </label>
+          <label class="scope-option">
+            <input type="radio" name="aa_modalidade" value="restabelecimento" onchange="aaModalidadeMudou(this)">
+            <span><strong>Restabelecimento</strong> — buscar a retomada do benefício cessado</span>
+          </label>
+          <label class="scope-option">
+            <input type="radio" name="aa_modalidade" value="revisao" onchange="aaModalidadeMudou(this)">
+            <span><strong>Revisão</strong> — corrigir o valor de um auxílio-acidente já concedido</span>
+          </label>
+        </div>
+
+        <div class="form-group" id="aa_grupoMinimo" style="display:none; margin-top:16px">
+          <label class="field-label">Mínimo para Revisão (R$) — cláusula 6.3</label>
+          <input type="text" id="aa_minimoRevisao" placeholder="Ex: 3.000,00" maxlength="100">
+          <p class="docs-hint">Só aparece no contrato quando a modalidade é revisão. Deixe em branco
+          para o campo seguir editável no PDF e ser preenchido depois.</p>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="num">3</div>
+        <h2>Assinatura e Testemunhas</h2>
+      </div>
+      <div class="card-body">
+
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label class="field-label">Cidade / Estado da Assinatura <span style="color:var(--red)">*</span></label>
+            <input type="text" id="aa_local" placeholder="Ex: Linhares / ES" maxlength="120">
+          </div>
+          <div class="form-group">
+            <label class="field-label">Data da Assinatura <span style="color:var(--red)">*</span></label>
+            <input type="date" id="aa_data">
+          </div>
+        </div>
+
+        <div class="section-label" style="margin-top:4px">Testemunhas (opcional)</div>
+
+        <div class="form-row cols-2 mb-16">
+          <div class="form-group">
+            <label class="field-label">1ª Testemunha — Nome</label>
+            <input type="text" id="aa_test1Nome" placeholder="Nome completo" maxlength="100">
+          </div>
+          <div class="form-group">
+            <label class="field-label">1ª Testemunha — CPF</label>
+            <input type="text" id="aa_test1Cpf" placeholder="000.000.000-00" maxlength="14">
+          </div>
+        </div>
+
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label class="field-label">2ª Testemunha — Nome</label>
+            <input type="text" id="aa_test2Nome" placeholder="Nome completo" maxlength="100">
+          </div>
+          <div class="form-group">
+            <label class="field-label">2ª Testemunha — CPF</label>
+            <input type="text" id="aa_test2Cpf" placeholder="000.000.000-00" maxlength="14">
+          </div>
+        </div>
+
+        <p class="docs-hint">O que ficar em branco continua como campo editável no PDF, para
+        preencher à mão ou no computador na hora da assinatura.</p>
+
+      </div>
+    </div>
+
+    <button class="generate-btn" id="generateBtnAA" onclick="generateContractAA()">
+      ⬇ &nbsp;Gerar Contrato de Auxílio-Acidente em PDF
+    </button>
+
+  </div><!-- /form-auxilio -->
 
 </div><!-- /container -->
 
@@ -1513,13 +1653,22 @@ async function _buildAndDownload() {
 // ═══════════════════════════════════════════════════════
 //  CONTRACT TYPE SWITCHER
 // ═══════════════════════════════════════════════════════
+const ABAS = [
+  { modo: 'honorarios',  form: 'form-honorarios',  tab: 'tab-honorarios',  titulo: 'Honorários Advocatícios' },
+  { modo: 'maternidade', form: 'form-maternidade', tab: 'tab-maternidade', titulo: 'Salário-Maternidade'     },
+  { modo: 'auxilio',     form: 'form-auxilio',     tab: 'tab-auxilio',     titulo: 'Auxílio-Acidente'        }
+];
+
 function switchContract(mode) {
-  window.document.getElementById('form-honorarios').style.display  = mode === 'honorarios' ? 'block' : 'none';
-  window.document.getElementById('form-maternidade').style.display = mode === 'maternidade' ? 'block' : 'none';
-  window.document.getElementById('tab-honorarios').classList.toggle('active', mode === 'honorarios');
-  window.document.getElementById('tab-maternidade').classList.toggle('active', mode === 'maternidade');
+  ABAS.forEach(a => {
+    const form = window.document.getElementById(a.form);
+    const tab  = window.document.getElementById(a.tab);
+    if (form) form.style.display = a.modo === mode ? 'block' : 'none';
+    if (tab)  tab.classList.toggle('active', a.modo === mode);
+  });
+  const aba = ABAS.find(a => a.modo === mode);
   window.document.getElementById('headerSubtitle').textContent =
-    mode === 'honorarios' ? 'Honorários Advocatícios' : 'Salário-Maternidade';
+    aba ? aba.titulo : '';
 }
 
 // ═══════════════════════════════════════════════════════
@@ -2170,6 +2319,213 @@ async function matAnexarDeclaracao(pdfDoc, dados) {
   y += DECL.corpo.linha;
   paragrafo([{ t: 'CPF nº ' + cpf }], y, { centro: true });
 }
+
+// ═══════════════════════════════════════════════════════
+//  GENERATE – AUXÍLIO-ACIDENTE
+// ═══════════════════════════════════════════════════════
+//
+//  Aqui o modelo `modelo-auxilio-acidente.pdf` (11 páginas, A4) já traz
+//  formulário: 14 campos de texto e o grupo de opções da modalidade. Em
+//  vez de escrever por coordenadas, como nas outras peças, preenchemos
+//  os campos pelo nome e deixamos o próprio PDF posicionar o texto.
+//
+//  O formulário continua ativo no arquivo gerado: o que não for
+//  preenchido aqui (testemunhas, por exemplo) segue editável na hora da
+//  assinatura.
+
+const AA_CAMPOS = [
+  ['nome_completo',      'aa_nome'],
+  ['profissao',          'aa_profissao'],
+  ['cpf',                'aa_cpf'],
+  ['endereco',           'aa_endereco'],
+  ['cidade_estado',      'aa_cidadeEstado'],
+  ['telefone_whatsapp',  'aa_telefone'],
+  ['email',              'aa_email'],
+  ['local_assinatura',   'aa_local'],
+  ['testemunha_1_nome',  'aa_test1Nome'],
+  ['testemunha_1_cpf',   'aa_test1Cpf'],
+  ['testemunha_2_nome',  'aa_test2Nome'],
+  ['testemunha_2_cpf',   'aa_test2Cpf']
+];
+
+const AA_MODALIDADES = {
+  concessao:        'Concessão',
+  restabelecimento: 'Restabelecimento',
+  revisao:          'Revisão'
+};
+
+function aaModalidade() {
+  const m = window.document.querySelector('input[name="aa_modalidade"]:checked');
+  return m ? m.value : 'concessao';
+}
+
+// Mostra o mínimo da revisão só quando a modalidade é revisão, e mantém o
+// realce da opção escolhida (mesmo comportamento do escopo de honorários).
+function aaModalidadeMudou(radio) {
+  if (radio) {
+    window.document.querySelectorAll('input[name="aa_modalidade"]').forEach(r => {
+      r.closest('.scope-option').classList.toggle('selected', r.checked);
+    });
+  }
+  const grupo = window.document.getElementById('aa_grupoMinimo');
+  if (grupo) grupo.style.display = aaModalidade() === 'revisao' ? 'block' : 'none';
+}
+
+// A cidade da assinatura quase sempre repete a do cliente: preenchemos
+// junto enquanto o campo não for editado à mão.
+function aaEspelharLocal() {
+  const local = window.document.getElementById('aa_local');
+  if (!local || local.dataset.editado === '1') return;
+  local.value = window.document.getElementById('aa_cidadeEstado').value;
+}
+
+async function generateContractAA() {
+  const val = id => (window.document.getElementById(id).value || '').trim();
+
+  const erros = [];
+  if (!val('aa_nome'))         erros.push('Nome completo');
+  if (!val('aa_cpf'))          erros.push('CPF');
+  if (!val('aa_endereco'))     erros.push('Endereço');
+  if (!val('aa_cidadeEstado')) erros.push('Cidade / Estado');
+  if (!val('aa_telefone'))     erros.push('Telefone / WhatsApp');
+  if (!val('aa_local'))        erros.push('Cidade / Estado da assinatura');
+  if (!val('aa_data'))         erros.push('Data da assinatura');
+
+  if (erros.length) {
+    alert('Por favor, preencha os campos obrigatórios:\n\n• ' + erros.join('\n• '));
+    return;
+  }
+
+  const btn = window.document.getElementById('generateBtnAA');
+  btn.disabled = true;
+  btn.textContent = '⏳  Gerando contrato…';
+
+  try {
+    await _buildAndDownloadAA();
+  } catch (err) {
+    console.error(err);
+    alert('Erro ao gerar o contrato:\n' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '⬇ &nbsp;Gerar Contrato de Auxílio-Acidente em PDF';
+  }
+}
+
+async function _buildAndDownloadAA() {
+  if (typeof PDFLib === 'undefined') {
+    throw new Error('A biblioteca pdf-lib não carregou. Recarregue a página (Ctrl+F5).');
+  }
+  const { PDFDocument, StandardFonts } = PDFLib;
+  const val = id => (window.document.getElementById(id).value || '').trim();
+
+  // ─── Carrega o modelo ───
+  let bytesModelo;
+  try {
+    const resp = await fetch('modelo-auxilio-acidente.pdf');
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    bytesModelo = await resp.arrayBuffer();
+  } catch (e) {
+    throw new Error(
+      'Não foi possível carregar o modelo "modelo-auxilio-acidente.pdf".\n\n' +
+      'Se você abriu este arquivo direto do disco (file://), o navegador ' +
+      'bloqueia a leitura do modelo. Use o endereço do site.'
+    );
+  }
+
+  const pdfDoc = await PDFDocument.load(bytesModelo);
+  const form   = pdfDoc.getForm();
+  const helv   = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+  // O modelo pede 10 pt em todos os campos; sem fixar, a pdf-lib
+  // redimensiona sozinha e cada linha sai de um tamanho. Só reduzimos
+  // quando o valor não couber na largura da caixa.
+  const AA_CORPO = 10;
+  function escrever(campo, texto) {
+    const t = matClean(texto);
+    if (!t) return;
+    let f;
+    try {
+      f = form.getTextField(campo);
+    } catch (e) {
+      console.warn('Campo ausente no modelo:', campo, e);
+      return;
+    }
+    let size = AA_CORPO;
+    try {
+      const w = f.acroField.getWidgets()[0].getRectangle().width - 6;
+      while (size > 6 && helv.widthOfTextAtSize(t, size) > w) size -= 0.25;
+    } catch (e) {
+      // sem retângulo legível, fica no corpo padrão
+    }
+    // Os campos do modelo não trazem o operador de fonte, então setFontSize()
+    // não funciona neles: escrevemos a aparência padrão (fonte, corpo e cor)
+    // na mão, e é ela que updateFieldAppearances() usa ao redesenhar.
+    try {
+      f.acroField.setDefaultAppearance(`/Helv ${size} Tf 0 g`);
+    } catch (e) {
+      console.warn('Não foi possível fixar o corpo do campo:', campo, e);
+    }
+    f.setText(t);
+  }
+
+  // ─── Campos de texto ───
+  // matClean remove o que a Helvetica (WinAnsi) não representa; o
+  // português inteiro passa.
+  AA_CAMPOS.forEach(([campo, input]) => escrever(campo, val(input)));
+
+  // ─── Data da assinatura (dd/mm/aaaa) ───
+  const dataVal = val('aa_data');
+  if (dataVal) escrever('data_assinatura', formatDateShort(dataVal));
+
+  // ─── Modalidade do pedido ───
+  const modalidade = aaModalidade();
+  try {
+    form.getRadioGroup('modalidade_do_pedido').select(modalidade);
+  } catch (e) {
+    console.warn('Grupo de modalidade ausente no modelo:', e);
+  }
+
+  // ─── Mínimo da revisão (cláusula 6.3) ───
+  if (modalidade === 'revisao') {
+    const minimo = val('aa_minimoRevisao');
+    if (minimo) {
+      escrever('honorario_minimo_revisao',
+               minimo.startsWith('R$') ? minimo : 'R$ ' + minimo);
+    }
+  }
+
+  // Redesenha as aparências com a Helvetica embutida, para o texto
+  // aparecer igual em qualquer leitor de PDF.
+  form.updateFieldAppearances(helv);
+
+  // ─── Download ───
+  const bytes = await pdfDoc.save();
+  const blob  = new Blob([bytes], { type: 'application/pdf' });
+  const url   = URL.createObjectURL(blob);
+  const nome   = val('aa_nome');
+  const sufixo = dataVal ? ' - ' + dataVal.split('-').reverse().join('_') : '';
+  const a = Object.assign(window.document.createElement('a'), {
+    href: url,
+    download: `Contrato - Auxílio-Acidente (${AA_MODALIDADES[modalidade]}) - ${nome || 'Cliente'}${sufixo}.pdf`
+  });
+  window.document.body.appendChild(a);
+  a.click();
+  window.document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ─── Inicialização da aba de auxílio-acidente ───
+document.addEventListener('DOMContentLoaded', () => {
+  const data = document.getElementById('aa_data');
+  if (data) data.value = new Date().toISOString().split('T')[0];
+
+  // Depois de digitado à mão, o local da assinatura para de espelhar a
+  // cidade do cliente.
+  const local = document.getElementById('aa_local');
+  if (local) local.addEventListener('input', () => { local.dataset.editado = '1'; });
+
+  aaModalidadeMudou(null);
+});
 </script>
 </body>
 </html>
