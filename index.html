@@ -749,10 +749,18 @@
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="field-label">Profissão</label>
-          <input type="text" id="aa_profissao" placeholder="Ex: Pedreiro, Motorista, Costureira" maxlength="80">
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label class="field-label">Profissão</label>
+            <input type="text" id="aa_profissao" placeholder="Ex: Pedreiro, Motorista, Costureira" maxlength="80">
+          </div>
+          <div class="form-group">
+            <label class="field-label">Estado Civil</label>
+            <input type="text" id="aa_estadoCivil" placeholder="Ex: Casado, Solteiro, União estável">
+          </div>
         </div>
+        <p class="docs-hint" style="margin:-6px 0 14px">O estado civil não entra no contrato de
+        auxílio-acidente; ele é usado pela declaração de hipossuficiência.</p>
 
         <div class="form-group">
           <label class="field-label">Endereço Completo <span style="color:var(--red)">*</span></label>
@@ -779,9 +787,37 @@
       </div>
     </div>
 
+    <!-- ═══ CARD 2 – DOCUMENTOS A GERAR ═══ -->
     <div class="card">
       <div class="card-header">
         <div class="num">2</div>
+        <h2>Documentos a Gerar</h2>
+      </div>
+      <div class="card-body">
+        <div class="checklist">
+          <label class="check-item checked">
+            <input type="checkbox" id="aa_doc_contrato" checked onchange="aaAtualizarBotao()">
+            <span>Contrato de honorários — Auxílio-Acidente</span>
+          </label>
+          <label class="check-item checked">
+            <input type="checkbox" id="aa_doc_procuracao" checked onchange="aaAtualizarBotao()">
+            <span>Procuração e termo de representação — INSS</span>
+          </label>
+          <label class="check-item checked">
+            <input type="checkbox" id="aa_doc_declaracao" checked onchange="aaAtualizarBotao()">
+            <span>Declaração de hipossuficiência econômica</span>
+          </label>
+        </div>
+        <p class="docs-hint">
+          O que estiver marcado sai num único arquivo PDF, nesta ordem. Desmarque o que
+          não for necessário para gerar só uma peça ou uma combinação delas.
+        </p>
+      </div>
+    </div>
+
+    <div class="card" id="aa_cardModalidade">
+      <div class="card-header">
+        <div class="num">3</div>
         <h2>Modalidade do Pedido</h2>
       </div>
       <div class="card-body">
@@ -813,7 +849,7 @@
 
     <div class="card">
       <div class="card-header">
-        <div class="num">3</div>
+        <div class="num">4</div>
         <h2>Assinatura e Testemunhas</h2>
       </div>
       <div class="card-body">
@@ -831,6 +867,7 @@
 
         <div class="section-label" style="margin-top:4px">Testemunhas (opcional)</div>
 
+        <div id="aa_blocoTestemunhas">
         <div class="form-row cols-2 mb-16">
           <div class="form-group">
             <label class="field-label">1ª Testemunha — Nome</label>
@@ -855,12 +892,13 @@
 
         <p class="docs-hint">O que ficar em branco continua como campo editável no PDF, para
         preencher à mão ou no computador na hora da assinatura.</p>
+        </div>
 
       </div>
     </div>
 
     <button class="generate-btn" id="generateBtnAA" onclick="generateContractAA()">
-      ⬇ &nbsp;Gerar Contrato de Auxílio-Acidente em PDF
+      ⬇ &nbsp;Gerar Contrato, Procuração e Declaração em PDF
     </button>
 
   </div><!-- /form-auxilio -->
@@ -1672,12 +1710,41 @@ function switchContract(mode) {
 }
 
 // ═══════════════════════════════════════════════════════
-//  GENERATE – SALÁRIO-MATERNIDADE
+//  SELEÇÃO DE DOCUMENTOS (maternidade e auxílio-acidente)
 // ═══════════════════════════════════════════════════════
 //
 //  Cada peça pode ser gerada sozinha ou combinada com as outras: o que
 //  estiver marcado no card "Documentos a Gerar" entra no mesmo PDF, na
 //  ordem contrato → procuração → declaração.
+
+// Lê as caixas de uma aba. Sem os campos na tela, gera tudo.
+function docsSelecionados(lista) {
+  const sel = {};
+  lista.forEach(d => {
+    const cb = window.document.getElementById(d.id);
+    sel[d.chave] = !cb || cb.checked;
+  });
+  return sel;
+}
+
+// "Contrato", "Contrato e Procuração", "Contrato, Procuração e Declaração"…
+function docsNomes(lista) {
+  const sel   = docsSelecionados(lista);
+  const nomes = lista.filter(d => sel[d.chave]).map(d => d.nome);
+  if (!nomes.length) return '';
+  if (nomes.length === 1) return nomes[0];
+  return nomes.slice(0, -1).join(', ') + ' e ' + nomes[nomes.length - 1];
+}
+
+function docsRotuloBotao(lista) {
+  const nomes = docsNomes(lista);
+  return nomes ? `⬇ &nbsp;Gerar ${nomes} em PDF`
+               : '⬇ &nbsp;Selecione ao menos um documento';
+}
+
+// ═══════════════════════════════════════════════════════
+//  GENERATE – SALÁRIO-MATERNIDADE
+// ═══════════════════════════════════════════════════════
 
 const MAT_DOCS = [
   { id: 'mat_doc_contrato',   chave: 'contrato',   nome: 'Contrato'   },
@@ -1685,29 +1752,9 @@ const MAT_DOCS = [
   { id: 'mat_doc_declaracao', chave: 'declaracao', nome: 'Declaração' }
 ];
 
-function matSelecionados() {
-  const sel = {};
-  MAT_DOCS.forEach(d => {
-    const cb = window.document.getElementById(d.id);
-    sel[d.chave] = !cb || cb.checked;   // sem o campo na tela, gera tudo
-  });
-  return sel;
-}
-
-// "Contrato", "Contrato e Procuração", "Contrato, Procuração e Declaração"…
-function matNomesSelecionados() {
-  const sel = matSelecionados();
-  const nomes = MAT_DOCS.filter(d => sel[d.chave]).map(d => d.nome);
-  if (!nomes.length) return '';
-  if (nomes.length === 1) return nomes[0];
-  return nomes.slice(0, -1).join(', ') + ' e ' + nomes[nomes.length - 1];
-}
-
-function matRotuloBotao() {
-  const nomes = matNomesSelecionados();
-  return nomes ? `⬇ &nbsp;Gerar ${nomes} em PDF`
-               : '⬇ &nbsp;Selecione ao menos um documento';
-}
+function matSelecionados()      { return docsSelecionados(MAT_DOCS); }
+function matNomesSelecionados() { return docsNomes(MAT_DOCS); }
+function matRotuloBotao()       { return docsRotuloBotao(MAT_DOCS); }
 
 function matAtualizarBotao() {
   const btn = window.document.getElementById('generateBtnMat');
@@ -2246,6 +2293,9 @@ async function matAnexarDeclaracao(pdfDoc, dados) {
   const cidade      = (dados.cidade || '').trim();
   const endereco    = [ (dados.endereco || '').trim(), cidade ]
                         .filter(Boolean).join(', ') || '______________________';
+  // O fecho leva o lugar da assinatura; quando ele não é informado à
+  // parte, vale a cidade da própria cliente.
+  const local       = (dados.local || '').trim() || cidade;
 
   // ─── Título ───
   const T = DECL.titulo;
@@ -2300,7 +2350,7 @@ async function matAnexarDeclaracao(pdfDoc, dados) {
   y += DECL.dataOff;
   const dataExt = dados.data ? formatDateBR(dados.data) : '____ de ______________ de ______';
   paragrafo([
-    { t: (cidade || '______________'), b: true }, { t: ', ' },
+    { t: (local || '______________'), b: true }, { t: ', ' },
     { t: dataExt, b: true }, { t: '.' }
   ], y, { centro: true });
 
@@ -2348,6 +2398,14 @@ const AA_CAMPOS = [
   ['testemunha_2_cpf',   'aa_test2Cpf']
 ];
 
+const AA_DOCS = [
+  { id: 'aa_doc_contrato',   chave: 'contrato',   nome: 'Contrato'   },
+  { id: 'aa_doc_procuracao', chave: 'procuracao', nome: 'Procuração' },
+  { id: 'aa_doc_declaracao', chave: 'declaracao', nome: 'Declaração' }
+];
+
+function aaSelecionados() { return docsSelecionados(AA_DOCS); }
+
 const AA_MODALIDADES = {
   concessao:        'Concessão',
   restabelecimento: 'Restabelecimento',
@@ -2371,6 +2429,21 @@ function aaModalidadeMudou(radio) {
   if (grupo) grupo.style.display = aaModalidade() === 'revisao' ? 'block' : 'none';
 }
 
+// A modalidade e as testemunhas só existem no contrato; sem ele, saem de
+// cena para não sugerir que mudam alguma coisa.
+function aaAtualizarBotao() {
+  const btn = window.document.getElementById('generateBtnAA');
+  if (btn && !btn.disabled) btn.innerHTML = docsRotuloBotao(AA_DOCS);
+
+  const temContrato = aaSelecionados().contrato;
+  ['aa_cardModalidade', 'aa_blocoTestemunhas'].forEach(id => {
+    const el = window.document.getElementById(id);
+    if (!el) return;
+    el.style.opacity       = temContrato ? '' : '.45';
+    el.style.pointerEvents = temContrato ? '' : 'none';
+  });
+}
+
 // A cidade da assinatura quase sempre repete a do cliente: preenchemos
 // junto enquanto o campo não for editado à mão.
 function aaEspelharLocal() {
@@ -2381,14 +2454,21 @@ function aaEspelharLocal() {
 
 async function generateContractAA() {
   const val = id => (window.document.getElementById(id).value || '').trim();
+  const sel = aaSelecionados();
+
+  if (!sel.contrato && !sel.procuracao && !sel.declaracao) {
+    alert('Selecione pelo menos um documento para gerar.');
+    return;
+  }
 
   const erros = [];
   if (!val('aa_nome'))         erros.push('Nome completo');
   if (!val('aa_cpf'))          erros.push('CPF');
   if (!val('aa_endereco'))     erros.push('Endereço');
   if (!val('aa_cidadeEstado')) erros.push('Cidade / Estado');
-  if (!val('aa_telefone'))     erros.push('Telefone / WhatsApp');
-  if (!val('aa_local'))        erros.push('Cidade / Estado da assinatura');
+  // Telefone e local da assinatura só aparecem no contrato.
+  if (!val('aa_telefone') && sel.contrato) erros.push('Telefone / WhatsApp');
+  if (!val('aa_local')    && sel.contrato) erros.push('Cidade / Estado da assinatura');
   if (!val('aa_data'))         erros.push('Data da assinatura');
 
   if (erros.length) {
@@ -2401,20 +2481,67 @@ async function generateContractAA() {
   btn.textContent = '⏳  Gerando contrato…';
 
   try {
-    await _buildAndDownloadAA();
+    await _buildAndDownloadAA(sel);
   } catch (err) {
     console.error(err);
-    alert('Erro ao gerar o contrato:\n' + err.message);
+    alert('Erro ao gerar os documentos:\n' + err.message);
   } finally {
     btn.disabled = false;
-    btn.innerHTML = '⬇ &nbsp;Gerar Contrato de Auxílio-Acidente em PDF';
+    btn.innerHTML = docsRotuloBotao(AA_DOCS);
   }
 }
 
-async function _buildAndDownloadAA() {
+async function _buildAndDownloadAA(sel) {
   if (typeof PDFLib === 'undefined') {
     throw new Error('A biblioteca pdf-lib não carregou. Recarregue a página (Ctrl+F5).');
   }
+  const { PDFDocument } = PDFLib;
+  const val  = id => (window.document.getElementById(id).value || '').trim();
+  const docs = sel || aaSelecionados();
+
+  const dados = {
+    nome:        val('aa_nome'),
+    estadoCivil: val('aa_estadoCivil'),
+    profissao:   val('aa_profissao'),
+    cpf:         val('aa_cpf'),
+    endereco:    val('aa_endereco'),
+    cidade:      val('aa_cidadeEstado'),
+    telefone:    val('aa_telefone'),
+    email:       val('aa_email'),
+    data:        val('aa_data'),
+    local:       val('aa_local')
+  };
+  const modalidade = aaModalidade();
+
+  // Como na aba de maternidade: o contrato, quando marcado, é a base do
+  // arquivo — é ele que vem de um modelo pronto.
+  const pdfDoc = docs.contrato ? await aaGerarContrato(dados, modalidade)
+                               : await PDFDocument.create();
+
+  if (docs.procuracao) await matAnexarProcuracao(pdfDoc, dados);
+  if (docs.declaracao) await matAnexarDeclaracao(pdfDoc, dados);
+
+  // ─── Download ───
+  const bytes  = await pdfDoc.save();
+  const blob   = new Blob([bytes], { type: 'application/pdf' });
+  const url    = URL.createObjectURL(blob);
+  const sufixo = dados.data ? ' - ' + dados.data.split('-').reverse().join('_') : '';
+  const titulo = docsNomes(AA_DOCS) +
+                 (docs.contrato ? ` - Auxílio-Acidente (${AA_MODALIDADES[modalidade]})`
+                                : ' - Auxílio-Acidente');
+  const a = Object.assign(window.document.createElement('a'), {
+    href: url,
+    download: `${titulo} - ${dados.nome || 'Cliente'}${sufixo}.pdf`
+  });
+  window.document.body.appendChild(a);
+  a.click();
+  window.document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// Carrega `modelo-auxilio-acidente.pdf` e preenche o formulário dele,
+// devolvendo o documento pronto.
+async function aaGerarContrato(d, modalidade) {
   const { PDFDocument, StandardFonts } = PDFLib;
   const val = id => (window.document.getElementById(id).value || '').trim();
 
@@ -2478,7 +2605,6 @@ async function _buildAndDownloadAA() {
   if (dataVal) escrever('data_assinatura', formatDateShort(dataVal));
 
   // ─── Modalidade do pedido ───
-  const modalidade = aaModalidade();
   try {
     form.getRadioGroup('modalidade_do_pedido').select(modalidade);
   } catch (e) {
@@ -2498,20 +2624,7 @@ async function _buildAndDownloadAA() {
   // aparecer igual em qualquer leitor de PDF.
   form.updateFieldAppearances(helv);
 
-  // ─── Download ───
-  const bytes = await pdfDoc.save();
-  const blob  = new Blob([bytes], { type: 'application/pdf' });
-  const url   = URL.createObjectURL(blob);
-  const nome   = val('aa_nome');
-  const sufixo = dataVal ? ' - ' + dataVal.split('-').reverse().join('_') : '';
-  const a = Object.assign(window.document.createElement('a'), {
-    href: url,
-    download: `Contrato - Auxílio-Acidente (${AA_MODALIDADES[modalidade]}) - ${nome || 'Cliente'}${sufixo}.pdf`
-  });
-  window.document.body.appendChild(a);
-  a.click();
-  window.document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  return pdfDoc;
 }
 
 // ─── Inicialização da aba de auxílio-acidente ───
@@ -2525,6 +2638,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (local) local.addEventListener('input', () => { local.dataset.editado = '1'; });
 
   aaModalidadeMudou(null);
+  aaAtualizarBotao();
 });
 </script>
 </body>
